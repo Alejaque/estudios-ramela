@@ -4,15 +4,10 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
-    { "source": "/api/health", "destination": "/api/health" },
-    { "source": "/api/study/stream", "destination": "/api/study-stream" },
-    { "source": "/api/study", "destination": "/api/study" },
+    { "source": "/api/health", "destination": "/api/salud" },
+    { "source": "/api/study", "destination": "/api/estudio" },
+    { "source": "/api/study/stream", "destination": "/api/flujo-de-estudio" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
