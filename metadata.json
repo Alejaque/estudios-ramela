@@ -1,0 +1,8 @@
+{
+  "name": "Estudios Alejandro Ramela",
+  "description": "Plataforma de exégesis bíblica histórico-gramatical y bosquejos homiléticos expositivos por Alejandro Ramela.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
