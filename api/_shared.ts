@@ -26,9 +26,9 @@ Reglas adicionales:
 - Si el usuario especificó una versión bíblica (ej. Reina-Valera 1960, NBLA, NVI), cita los textos primariamente en esa versión.`;
 
 export const MODEL_CANDIDATES = [
-  'google/gemma-3-27b-it:free',
+  'openrouter/free',
   'meta-llama/llama-3.3-70b-instruct:free',
-  'microsoft/phi-4-reasoning:free',
+  'google/gemma-3-27b-it:free',
 ];
 
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
