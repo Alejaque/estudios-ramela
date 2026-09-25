@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, Sparkles, GraduationCap, ScrollText, Camera, RotateCcw } from 'lucide-react';
 
-const DEFAULT_PORTADA = '/portada-alejandro-ramela.jpg';
+const DEFAULT_PORTADA = '/portada-alejandro-ramela.png';
+const FALLBACK_PORTADA = '/portada-alejandro-ramela.jpg';
 export const CoverHero: React.FC = () => {
   const [avatarSrc, setAvatarSrc] = useState<string>(() => {
     try {
