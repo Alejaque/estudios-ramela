@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Bookmark, Maximize2, Volume2, VolumeX, Sun, Moon } from 'lucide-react';
+import { Bookmark, Maximize2, Volume2, VolumeX, Sun, Moon } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
@@ -28,8 +28,12 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         {/* Brand & Identity */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 dark:from-amber-500 dark:to-amber-700 flex items-center justify-center text-slate-950 shadow-xs shrink-0 ring-1 ring-amber-400/50">
-            <BookOpen className="w-5 h-5 text-slate-950" />
+          <div className="w-10 h-10 rounded-xl shrink-0 overflow-hidden shadow-xs ring-1 ring-amber-400/50">
+            <img
+              src="/favicon.png"
+              alt="Logo Estudios Alejandro Ramela"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
