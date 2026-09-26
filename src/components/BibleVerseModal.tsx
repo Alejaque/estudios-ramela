@@ -7,14 +7,14 @@ interface BibleVerseModalProps {
 }
 
 const TRANSLATIONS = [
-  { id: 'RVR1960', label: 'RVR60' },
-  { id: 'PDT', label: 'PDT' },
-  { id: 'LBLA', label: 'LBLA' },
-  { id: 'TLA', label: 'TLA' },
+  { id: 'rvr60', label: 'RVR60' },
+  { id: 'pdt', label: 'PDT' },
+  { id: 'lbla', label: 'LBLA' },
+  { id: 'tla', label: 'TLA' },
 ];
 
 export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onClose }) => {
-  const [translation, setTranslation] = useState('RVR1960');
+  const [translation, setTranslation] = useState('rvr60');
   const [verseText, setVerseText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,17 +26,15 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
       setVerseText('');
       try {
         const encoded = encodeURIComponent(reference);
-        const trans = translation === 'RVR1960' ? 'rv1960'
-          : translation === 'LBLA' ? 'lbla'
-          : translation === 'PDT' ? 'pdt'
-          : 'tla';
         const res = await fetch(
-          `https://bible-api.com/${encoded}?translation=${trans}`
+          `https://getbible.net/v2/${translation}/${encoded}.json`
         );
         if (!res.ok) throw new Error('No encontrado');
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        setVerseText(data.text || 'Texto no disponible.');
+        const verses = Object.values(data.verses || {}) as any[];
+        if (!verses.length) throw new Error('Sin versículos');
+        const text = verses.map((v: any) => `${v.verse}. ${v.text}`).join(' ');
+        setVerseText(text);
       } catch {
         setError('No se pudo cargar el pasaje. Verificá la referencia o la conexión.');
       } finally {
@@ -49,7 +47,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-        
+
         {/* Encabezado */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-blue-50 dark:bg-blue-950/40">
           <div className="flex items-center gap-2">
@@ -108,8 +106,4 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
           </span>
         </div>
       </div>
-      {/* Cerrar al tocar afuera */}
-      <div className="absolute inset-0 -z-10" onClick={onClose} />
-    </div>
-  );
-};
+      <div className="absolute inset-0 -z-10" onClick
