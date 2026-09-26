@@ -157,7 +157,11 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       <div className="flex-1 overflow-y-auto px-4 sm:px-12 md:px-20 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="border-b pb-4 mb-6 border-slate-200 dark:border-slate-800">
-            <h1 className="text-2xl sm:text-3xl font-bold font-theology-serif tracking-tight mb-1">
+            <h1
+              className="text-2xl sm:text-3xl font-bold font-theology-serif tracking-tight mb-1 cursor-pointer text-blue-700 dark:text-blue-400 underline decoration-dotted hover:text-blue-900 transition-colors"
+              onClick={() => setVerseRef(passageOrTopic.trim())}
+              title="Tocar para leer el pasaje"
+            >
               {passageOrTopic}
             </h1>
             {translation && (
