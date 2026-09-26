@@ -107,3 +107,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
         </div>
       </div>
       <div className="absolute inset-0 -z-10" onClick
+={onClose} />
+    </div>
+  );
+};
