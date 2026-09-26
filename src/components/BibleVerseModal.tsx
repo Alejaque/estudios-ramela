@@ -26,11 +26,16 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
       setVerseText('');
       try {
         const encoded = encodeURIComponent(reference);
+        const trans = translation === 'RVR1960' ? 'rv1960'
+          : translation === 'LBLA' ? 'lbla'
+          : translation === 'PDT' ? 'pdt'
+          : 'tla';
         const res = await fetch(
-          `https://bible-api.com/${encoded}?translation=${translation.toLowerCase()}`
+          `https://bible-api.com/${encoded}?translation=${trans}`
         );
         if (!res.ok) throw new Error('No encontrado');
         const data = await res.json();
+        if (data.error) throw new Error(data.error);
         setVerseText(data.text || 'Texto no disponible.');
       } catch {
         setError('No se pudo cargar el pasaje. Verificá la referencia o la conexión.');
@@ -45,7 +50,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
         
-        {/* Header */}
+        {/* Encabezado */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-blue-50 dark:bg-blue-950/40">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-700 dark:text-blue-400" />
@@ -61,7 +66,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
           </button>
         </div>
 
-        {/* Translation selector */}
+        {/* Selector de traducción */}
         <div className="flex gap-2 px-5 py-3 border-b border-slate-100 dark:border-slate-800">
           {TRANSLATIONS.map((t) => (
             <button
@@ -78,7 +83,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
           ))}
         </div>
 
-        {/* Content */}
+        {/* Contenido */}
         <div className="px-5 py-5 min-h-[120px] flex items-center justify-center">
           {loading && (
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
@@ -96,14 +101,14 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
           )}
         </div>
 
-        {/* Footer */}
+        {/* Pie */}
         <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 text-center">
           <span className="text-xs text-slate-400 dark:text-slate-500">
-            {translation} · Tocá fuera para cerrar
+            {TRANSLATIONS.find(t => t.id === translation)?.label} · Tocá fuera para cerrar
           </span>
         </div>
       </div>
-      {/* Click outside to close */}
+      {/* Cerrar al tocar afuera */}
       <div className="absolute inset-0 -z-10" onClick={onClose} />
     </div>
   );
