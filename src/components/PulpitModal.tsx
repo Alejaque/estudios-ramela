@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { X, Printer, ZoomIn, ZoomOut, Moon, Sun, PenLine, FileDown } from 'lucide-react';
 import { exportStudyToPdf } from '../utils/pdfExport';
+import { BibleVerseModal } from './BibleVerseModal';
 
 interface PulpitModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   const [fontSize, setFontSize] = useState<number>(18);
   const [isDark, setIsDark] = useState<boolean>(false);
   const [personalNote, setPersonalNote] = useState<string>('');
+  const [verseRef, setVerseRef] = useState<string | null>(null);
 
   useEffect(() => {
     if (!passageOrTopic) return;
@@ -42,9 +44,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   const handleExportPdf = () => {
     exportStudyToPdf({
@@ -55,13 +55,37 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     });
   };
 
+  const BoldAsVerse = ({ children }: { children?: React.ReactNode }) => {
+    const text = String(children ?? '');
+    const verseRegex = /^([1-3]?\s?[A-Za-záéíóúüñÁÉÍÓÚÜÑ]+\.?\s\d+[:\d,\-\s]*)/;
+    if (verseRegex.test(text.trim())) {
+      return (
+        <strong
+          className="cursor-pointer text-blue-700 dark:text-blue-400 underline decoration-dotted hover:text-blue-900 dark:hover:text-blue-200 transition-colors"
+          onClick={() => setVerseRef(text.trim())}
+          title="Tocar para leer el pasaje"
+        >
+          {children}
+        </strong>
+      );
+    }
+    return <strong>{children}</strong>;
+  };
+
   return (
     <div
       className={`fixed inset-0 z-50 flex flex-col ${
         isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
-      {/* Top Bar (no print) */}
+      {verseRef && (
+        <BibleVerseModal
+          reference={verseRef}
+          onClose={() => setVerseRef(null)}
+        />
+      )}
+
+      {/* Top Bar */}
       <div
         className={`px-4 sm:px-8 py-3.5 border-b flex items-center justify-between no-print ${
           isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
@@ -77,7 +101,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Zoom controls */}
           <div className="flex items-center rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden">
             <button
               onClick={() => setFontSize((s) => Math.max(14, s - 2))}
@@ -96,7 +119,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             </button>
           </div>
 
-          {/* Theme toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
             title="Cambiar tema día/noche"
@@ -105,7 +127,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
 
-          {/* Export PDF */}
           <button
             onClick={handleExportPdf}
             title="Descargar PDF para el púlpito"
@@ -115,7 +136,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             <span className="hidden md:inline">PDF</span>
           </button>
 
-          {/* Print */}
           <button
             onClick={handlePrint}
             title="Imprimir hoja para el púlpito"
@@ -124,7 +144,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             <Printer className="w-4 h-4" />
           </button>
 
-          {/* Close */}
           <button
             onClick={onClose}
             className="p-2 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:opacity-80 transition-colors cursor-pointer"
@@ -134,10 +153,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </div>
       </div>
 
-      {/* Reading Document Container */}
+      {/* Contenido */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-12 md:px-20 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header info in print or reader */}
           <div className="border-b pb-4 mb-6 border-slate-200 dark:border-slate-800">
             <h1 className="text-2xl sm:text-3xl font-bold font-theology-serif tracking-tight mb-1">
               {passageOrTopic}
@@ -153,12 +171,14 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             className="markdown-theology prose prose-slate dark:prose-invert max-w-none font-theology-serif"
             style={{ fontSize: `${fontSize}px`, lineHeight: 1.8 }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{ strong: BoldAsVerse }}
+            >
               {content}
             </ReactMarkdown>
           </div>
 
-          {/* Personal Notes Section in Pulpit View */}
           {personalNote && (
             <div className="mt-10 pt-6 border-t-2 border-amber-300/80 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 p-6 rounded-2xl">
               <h3 className="text-base sm:text-lg font-bold font-theology-serif text-amber-900 dark:text-amber-300 mb-3 flex items-center gap-2">
