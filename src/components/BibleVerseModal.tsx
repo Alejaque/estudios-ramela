@@ -7,14 +7,13 @@ interface BibleVerseModalProps {
 }
 
 const TRANSLATIONS = [
-  { id: 'rvr60', label: 'RVR60' },
-  { id: 'pdt', label: 'PDT' },
-  { id: 'lbla', label: 'LBLA' },
+  { id: 'rv1960', label: 'RVR60' },
+  { id: 'nvi', label: 'NVI' },
   { id: 'tla', label: 'TLA' },
 ];
 
 export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onClose }) => {
-  const [translation, setTranslation] = useState('rvr60');
+  const [translation, setTranslation] = useState('rv1960');
   const [verseText, setVerseText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,14 +26,15 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
       try {
         const encoded = encodeURIComponent(reference);
         const res = await fetch(
-          `https://getbible.net/v2/${translation}/${encoded}.json`
+          `https://bible-api.com/${encoded}?translation=${translation}`
         );
         if (!res.ok) throw new Error('No encontrado');
         const data = await res.json();
-        const verses = Object.values(data.verses || {}) as any[];
-        if (!verses.length) throw new Error('Sin versículos');
-        const text = verses.map((v: any) => `${v.verse}. ${v.text}`).join(' ');
-        setVerseText(text);
+        if (data.error) throw new Error(data.error);
+        const text = (data.verses || [])
+          .map((v: any) => `${v.verse}. ${v.text.trim()}`)
+          .join(' ');
+        setVerseText(text || data.text || 'Texto no disponible.');
       } catch {
         setError('No se pudo cargar el pasaje. Verificá la referencia o la conexión.');
       } finally {
@@ -106,8 +106,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
           </span>
         </div>
       </div>
-      <div className="absolute inset-0 -z-10" onClick
-={onClose} />
+      <div className="absolute inset-0 -z-10" onClick={onClose} />
     </div>
   );
 };
