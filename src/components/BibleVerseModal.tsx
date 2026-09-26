@@ -7,13 +7,12 @@ interface BibleVerseModalProps {
 }
 
 const TRANSLATIONS = [
-  { id: 'rv1960', label: 'RVR60' },
-  { id: 'nvi', label: 'NVI' },
-  { id: 'tla', label: 'TLA' },
+  { id: 'rvr09', label: 'RVR1909' },
+  { id: 'rv1960', label: 'RVR1960' },
 ];
 
 export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onClose }) => {
-  const [translation, setTranslation] = useState('rv1960');
+  const [translation, setTranslation] = useState('rvr09');
   const [verseText, setVerseText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,10 +30,11 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
         if (!res.ok) throw new Error('No encontrado');
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-        const text = (data.verses || [])
-          .map((v: any) => `${v.verse}. ${v.text.trim()}`)
-          .join(' ');
-        setVerseText(text || data.text || 'Texto no disponible.');
+        const verses = data.verses || [];
+        const text = verses.length
+          ? verses.map((v: any) => `${v.verse}. ${v.text.trim()}`).join(' ')
+          : data.text || 'Texto no disponible.';
+        setVerseText(text);
       } catch {
         setError('No se pudo cargar el pasaje. Verificá la referencia o la conexión.');
       } finally {
