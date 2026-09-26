@@ -6,13 +6,15 @@ interface BibleVerseModalProps {
   onClose: () => void;
 }
 
+const API_KEY = '0him5wcYiZAVcO274bN-n';
+
 const TRANSLATIONS = [
-  { id: 'rvr09', label: 'RVR1909' },
-  { id: 'rv1960', label: 'RVR1960' },
+  { id: '592420522e16049f-01', label: 'RVR60' },
+  { id: 'b32b9d1b64b4ef29-01', label: 'NVI' },
 ];
 
 export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onClose }) => {
-  const [translation, setTranslation] = useState('rvr09');
+  const [translation, setTranslation] = useState('592420522e16049f-01');
   const [verseText, setVerseText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,16 +27,16 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
       try {
         const encoded = encodeURIComponent(reference);
         const res = await fetch(
-          `https://bible-api.com/${encoded}?translation=${translation}`
+          `https://api.scripture.api.bible/v1/bibles/${translation}/search?query=${encoded}&limit=5`,
+          {
+            headers: { 'api-key': API_KEY },
+          }
         );
         if (!res.ok) throw new Error('No encontrado');
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        const verses = data.verses || [];
-        const text = verses.length
-          ? verses.map((v: any) => `${v.verse}. ${v.text.trim()}`).join(' ')
-          : data.text || 'Texto no disponible.';
-        setVerseText(text);
+        const passages = data.data?.passages || [];
+        if (!passages.length) throw new Error('Sin resultados');
+        setVerseText(passages[0].content.replace(/<[^>]+>/g, '').trim());
       } catch {
         setError('No se pudo cargar el pasaje. Verificá la referencia o la conexión.');
       } finally {
