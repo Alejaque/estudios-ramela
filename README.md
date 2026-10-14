@@ -21,6 +21,25 @@ npm i -g vercel
 vercel dev
 ```
 
+## Knowledge graph (Graphify)
+
+El repo incluye un grafo de conocimiento generado con
+[Graphify](https://github.com/Graphify-Labs/graphify) en `graphify-out/`:
+
+- `graph.html` → abrir en el browser: visual interactivo del código
+- `GRAPH_REPORT.md` → resumen: hubs, comunidades, conexiones
+- `graph.json` → grafo completo consultable
+
+```bash
+pip install graphifyy                       # instalar CLI (Python 3.10+)
+graphify query "cómo se genera un estudio?" # preguntar al grafo
+graphify path "App" "generateTheologicalStudy"
+graphify explain "App"
+graphify update . && graphify cluster-only .  # regenerar tras cambios
+```
+
+Ver `AGENTS.md` para la guía de uso con asistentes de IA.
+
 ## Estructura del proyecto
 
 ```

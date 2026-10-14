@@ -1,0 +1,212 @@
+{
+  "api/_shared.ts": {
+    "mtime": 1791990601.0767484,
+    "seen": 1791990666.3108375,
+    "ast_hash": "41ae7ec7223bc509d37125e094b219f6",
+    "semantic_hash": "41ae7ec7223bc509d37125e094b219f6"
+  },
+  "api/health.ts": {
+    "mtime": 1791990601.0767484,
+    "seen": 1791990666.3108408,
+    "ast_hash": "6c47622a964124764dc557f6e1f97981",
+    "semantic_hash": "6c47622a964124764dc557f6e1f97981"
+  },
+  "api/study-stream.ts": {
+    "mtime": 1791990601.0767484,
+    "seen": 1791990666.3108425,
+    "ast_hash": "9b6be3fcd77b764acb45526ef3368519",
+    "semantic_hash": "9b6be3fcd77b764acb45526ef3368519"
+  },
+  "api/study.ts": {
+    "mtime": 1791990601.0767484,
+    "seen": 1791990666.310844,
+    "ast_hash": "47675815dd5c9cf74c53e3024ee7a05a",
+    "semantic_hash": "47675815dd5c9cf74c53e3024ee7a05a"
+  },
+  "metadata.json": {
+    "mtime": 1791990601.0767484,
+    "seen": 1791990666.310845,
+    "ast_hash": "63601ad0aaf7a08a6946d15b79f9f964",
+    "semantic_hash": "63601ad0aaf7a08a6946d15b79f9f964"
+  },
+  "package.json": {
+    "mtime": 1791990601.0807483,
+    "seen": 1791990666.310846,
+    "ast_hash": "86d4155af18049569581aaf5690ee3b4",
+    "semantic_hash": "86d4155af18049569581aaf5690ee3b4"
+  },
+  "public/manifest.json": {
+    "mtime": 1791990601.0967484,
+    "seen": 1791990666.3108473,
+    "ast_hash": "b8aba6b3e018534ff3160288846501d6",
+    "semantic_hash": "b8aba6b3e018534ff3160288846501d6"
+  },
+  "scripts/generate-icons.js": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108492,
+    "ast_hash": "f92ddb61ab553481e4c51467ebbda273",
+    "semantic_hash": "f92ddb61ab553481e4c51467ebbda273"
+  },
+  "src/App.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108504,
+    "ast_hash": "e193249629dbb36bada01ad016e31cd4",
+    "semantic_hash": "e193249629dbb36bada01ad016e31cd4"
+  },
+  "src/components/AndroidInstallModal.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.310851,
+    "ast_hash": "ccc284a76644124ec83557380eec28fd",
+    "semantic_hash": "ccc284a76644124ec83557380eec28fd"
+  },
+  "src/components/BibleVerseModal.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108518,
+    "ast_hash": "18888a6d1ad55fba13978db839dca619",
+    "semantic_hash": "18888a6d1ad55fba13978db839dca619"
+  },
+  "src/components/CoverHero.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108528,
+    "ast_hash": "8ee29ec151fcfa7652c156f73fea280e",
+    "semantic_hash": "8ee29ec151fcfa7652c156f73fea280e"
+  },
+  "src/components/FollowUpChat.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108542,
+    "ast_hash": "d8a1eafe1caeb65a45c33fb1f0272a99",
+    "semantic_hash": "d8a1eafe1caeb65a45c33fb1f0272a99"
+  },
+  "src/components/Header.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.310855,
+    "ast_hash": "0b59607782c4633650c96f58a5942a62",
+    "semantic_hash": "0b59607782c4633650c96f58a5942a62"
+  },
+  "src/components/OfflineIndicator.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108559,
+    "ast_hash": "f9b1408d928f0a6b17a60059e6d20120",
+    "semantic_hash": "f9b1408d928f0a6b17a60059e6d20120"
+  },
+  "src/components/PWAInstallButton.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108568,
+    "ast_hash": "16e84b14f0ca8236f923e4bea62173bd",
+    "semantic_hash": "16e84b14f0ca8236f923e4bea62173bd"
+  },
+  "src/components/PersonalNotes.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108575,
+    "ast_hash": "ac446e19bc31cbe912e12f2c09496a50",
+    "semantic_hash": "ac446e19bc31cbe912e12f2c09496a50"
+  },
+  "src/components/PulpitModal.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108582,
+    "ast_hash": "dc8c8961d22b9fa9f0f2af271ffaadab",
+    "semantic_hash": "dc8c8961d22b9fa9f0f2af271ffaadab"
+  },
+  "src/components/SavedModal.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108592,
+    "ast_hash": "0d448910a0924d2fe60a81aec006cd92",
+    "semantic_hash": "0d448910a0924d2fe60a81aec006cd92"
+  },
+  "src/components/SectionCard.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108597,
+    "ast_hash": "d576ad7c0c1c8d73125a03d16f51e83d",
+    "semantic_hash": "d576ad7c0c1c8d73125a03d16f51e83d"
+  },
+  "src/components/StudyDisplay.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108609,
+    "ast_hash": "491baf762e047b0501d8dad6fc0bd41c",
+    "semantic_hash": "491baf762e047b0501d8dad6fc0bd41c"
+  },
+  "src/components/StudyInput.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108613,
+    "ast_hash": "36493cff7c9b1f62adf863db3b2c004f",
+    "semantic_hash": "36493cff7c9b1f62adf863db3b2c004f"
+  },
+  "src/data/sampleStudies.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108623,
+    "ast_hash": "96d02ac62ebb35a87c6c3ad16f8b6c22",
+    "semantic_hash": "96d02ac62ebb35a87c6c3ad16f8b6c22"
+  },
+  "src/hooks/useModalBackButton.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.310863,
+    "ast_hash": "cc1851d621d3cbeb55799d7209ac7efb",
+    "semantic_hash": "cc1851d621d3cbeb55799d7209ac7efb"
+  },
+  "src/hooks/useOnlineStatus.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108642,
+    "ast_hash": "8b1800dab04469426db1f9f8d50dd730",
+    "semantic_hash": "8b1800dab04469426db1f9f8d50dd730"
+  },
+  "src/hooks/usePWAInstall.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.310865,
+    "ast_hash": "597fc8b08a7d0b50bf97868178617293",
+    "semantic_hash": "597fc8b08a7d0b50bf97868178617293"
+  },
+  "src/main.tsx": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108656,
+    "ast_hash": "2b36426d5ad7e08ef79746aa524f4fb7",
+    "semantic_hash": "2b36426d5ad7e08ef79746aa524f4fb7"
+  },
+  "src/types.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108664,
+    "ast_hash": "8dcae9d33a7c2b67797cbeafc171d74f",
+    "semantic_hash": "8dcae9d33a7c2b67797cbeafc171d74f"
+  },
+  "src/utils/outlineTransition.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108668,
+    "ast_hash": "8f7ad1624407789410240342b35ae31f",
+    "semantic_hash": "8f7ad1624407789410240342b35ae31f"
+  },
+  "src/utils/pdfExport.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108678,
+    "ast_hash": "9f12af25be956805778a912cf8c6dee9",
+    "semantic_hash": "9f12af25be956805778a912cf8c6dee9"
+  },
+  "src/utils/sectionParser.ts": {
+    "mtime": 1791990601.1007483,
+    "seen": 1791990666.3108687,
+    "ast_hash": "1df6bd699631325a28f78660c2505017",
+    "semantic_hash": "1df6bd699631325a28f78660c2505017"
+  },
+  "src/utils/theologicalEngine.ts": {
+    "mtime": 1791990601.1047485,
+    "seen": 1791990666.3108697,
+    "ast_hash": "72c2ed23cb193c8b7fc5181f7dd40957",
+    "semantic_hash": "72c2ed23cb193c8b7fc5181f7dd40957"
+  },
+  "tsconfig.json": {
+    "mtime": 1791990601.1047485,
+    "seen": 1791990666.310871,
+    "ast_hash": "c59ff376124a608258442ff88d73f9de",
+    "semantic_hash": "c59ff376124a608258442ff88d73f9de"
+  },
+  "vercel.json": {
+    "mtime": 1791990601.1047485,
+    "seen": 1791990666.3108716,
+    "ast_hash": "694670b9c0b4cb907b9c704e9c1c64d0",
+    "semantic_hash": "694670b9c0b4cb907b9c704e9c1c64d0"
+  },
+  "vite.config.ts": {
+    "mtime": 1791990601.1047485,
+    "seen": 1791990666.310872,
+    "ast_hash": "89c6fe6ee8f1315b4163f2af455a79fa",
+    "semantic_hash": "89c6fe6ee8f1315b4163f2af455a79fa"
+  }
+}
