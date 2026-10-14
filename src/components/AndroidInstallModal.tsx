@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Smartphone, Check, Copy, ExternalLink, X, Sparkles } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { useModalBackButton } from '../hooks/useModalBackButton';
 
 interface AndroidInstallModalProps {
   isOpen: boolean;
@@ -11,6 +12,9 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({ isOpen
   const { isInstallable, install, isInstalled } = usePWAInstall();
   const [copied, setCopied] = useState(false);
   const [installing, setInstalling] = useState(false);
+
+  // "Atrás" del celular cierra el modal y vuelve al estudio, no sale de la app.
+  useModalBackButton(isOpen, onClose);
 
   if (!isOpen) return null;
 

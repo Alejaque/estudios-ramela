@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { ensureOutlineTransition } from './outlineTransition';
 
 interface ExportPdfOptions {
   passageOrTopic: string;
@@ -91,7 +92,8 @@ export function exportStudyToPdf({
 
   // Clean Markdown parsing for PDF
   // Strip heavy markdown tokens while preserving structure and bullets
-  const lines = content.split('\n');
+  // Incluye la Oración de Transición y Vista Previa si el bosquejo no la trae.
+  const lines = ensureOutlineTransition(content).split('\n');
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];

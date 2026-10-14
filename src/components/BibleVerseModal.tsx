@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Loader2, Copy, Check, Sparkles } from 'lucide-react';
 import { SCRIPTURE_TEXTS } from '../utils/theologicalEngine';
+import { useModalBackButton } from '../hooks/useModalBackButton';
 
 interface BibleVerseModalProps {
   reference: string;
@@ -20,6 +21,10 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
+
+  // Este modal solo se monta cuando está abierto: "Atrás" lo cierra y
+  // vuelve al estudio (o al púlpito) en vez de salir de la app.
+  useModalBackButton(true, onClose);
 
   // Normalizar referencia para búsqueda local
   const cleanRef = reference.trim().toLowerCase();

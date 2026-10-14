@@ -487,6 +487,12 @@ export function generateTheologicalStudy(
 - **Proposición (La Gran Idea):** 
   *En ${cleanTitle}, Dios revela su suficiencia soberana y su gracia redentora para que su pueblo viva con confianza inquebrantable, fruto de un corazón transformado por la verdad.*
 
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: La Revelación del Carácter y la Fidelidad de Dios**; en segundo lugar, **Punto II: La Respuesta de Fe y Humildad del Creyente**; y en tercer lugar, **Punto III: El Impacto Transformador en la Vida Cotidiana**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** La Revelación del Carácter y la Fidelidad de Dios
+  2. **Punto II:** La Respuesta de Fe y Humildad del Creyente
+  3. **Punto III:** El Impacto Transformador en la Vida Cotidiana
+
 - **Desarrollo de Puntos Principales:**
   - **I. La Revelación del Carácter y la Fidelidad de Dios:**
     - *A. La iniciativa del Señor:* Dios habla primero y establece los términos del pacto por pura misericordia.
@@ -549,6 +555,12 @@ function generateDoctrinalStudy(topic: string, translation: string): string {
 
 - **Proposición (La Gran Idea):** 
   *La comprensión bíblica de "${topic}" transforma nuestra mente, alinea nuestros afectos con el corazón de Dios y nos impulsa a una vida de obediencia ferviente para Su gloria.*
+
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: El Fundamento Bíblico y la Revelación Divina**; en segundo lugar, **Punto II: Las Distorsiones Comunes y la Corrección Pastoral**; y en tercer lugar, **Punto III: El Fruto Visible en la Comunidad de Fe**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** El Fundamento Bíblico y la Revelación Divina
+  2. **Punto II:** Las Distorsiones Comunes y la Corrección Pastoral
+  3. **Punto III:** El Fruto Visible en la Comunidad de Fe
 
 - **Desarrollo de Puntos Principales:**
   - **I. El Fundamento Bíblico y la Revelación Divina:**
