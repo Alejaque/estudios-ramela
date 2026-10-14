@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { SavedStudy } from '../types';
 import { MASTER_CURATED_STUDIES } from '../data/sampleStudies';
+import { useModalBackButton } from '../hooks/useModalBackButton';
 
 interface SavedModalProps {
   isOpen: boolean;
@@ -32,6 +33,9 @@ export const SavedModal: React.FC<SavedModalProps> = ({
   onImportStudies,
 }) => {
   const [searchFilter, setSearchFilter] = useState('');
+
+  // "Atrás" del celular cierra el modal y vuelve al estudio, no sale de la app.
+  useModalBackButton(isOpen, onClose);
 
   if (!isOpen) return null;
 

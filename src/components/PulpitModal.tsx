@@ -17,8 +17,12 @@ import {
   FileDown,
   Palette,
   ChevronRight,
+  ArrowLeft,
+  Timer,
 } from 'lucide-react';
 import { exportStudyToPdf } from '../utils/pdfExport';
+import { ensureOutlineTransition } from '../utils/outlineTransition';
+import { useModalBackButton } from '../hooks/useModalBackButton';
 import { BibleVerseModal } from './BibleVerseModal';
 
 interface PulpitModalProps {
@@ -55,6 +59,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   const [scrollSpeed, setScrollSpeed] = useState<number>(2); // 1 to 5
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const autoScrollAnimRef = useRef<number | null>(null);
+
+  // Botón/gesto "Atrás" del celular: vuelve al modo estudio, no sale de la app.
+  useModalBackButton(isOpen, onClose);
 
   // Clock updater
   useEffect(() => {
@@ -135,13 +142,16 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Bosquejo con la Oración de Transición y Vista Previa tras la Gran Idea.
+  const displayContent = ensureOutlineTransition(content);
+
   const handlePrint = () => window.print();
 
   const handleExportPdf = () => {
     exportStudyToPdf({
       passageOrTopic,
       translation,
-      content,
+      content: displayContent,
       personalNotes: personalNote,
     });
   };
@@ -172,16 +182,109 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     'midnight': 'bg-slate-900 border-slate-800 text-white',
   }[theme];
 
-  // Quick jump helper
+  // Quick jump helpers -----------------------------------------------------
+  const normalizeText = (text: string) =>
+    text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  /** Desplaza suavemente SOLO el contenedor del púlpito hasta el elemento. */
+  const scrollWithinContainer = (el: Element) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const offset =
+      container.scrollTop +
+      (el.getBoundingClientRect().top - container.getBoundingClientRect().top) -
+      12;
+    container.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
+
+    // Destello breve para ubicar el destino, sobre todo en pantallas chicas.
+    const htmlEl = el as HTMLElement;
+    const previous = {
+      outline: htmlEl.style.outline,
+      outlineOffset: htmlEl.style.outlineOffset,
+      borderRadius: htmlEl.style.borderRadius,
+    };
+    htmlEl.style.outline = '2px solid rgba(245, 158, 11, 0.9)';
+    htmlEl.style.outlineOffset = '3px';
+    htmlEl.style.borderRadius = '4px';
+    window.setTimeout(() => {
+      htmlEl.style.outline = previous.outline;
+      htmlEl.style.outlineOffset = previous.outlineOffset;
+      htmlEl.style.borderRadius = previous.borderRadius;
+    }, 1800);
+  };
+
   const scrollToHeading = (textSnippet: string) => {
     if (!scrollContainerRef.current) return;
-    const elements = scrollContainerRef.current.querySelectorAll('h1, h2, h3, strong');
+    const needle = normalizeText(textSnippet);
+    const elements = scrollContainerRef.current.querySelectorAll('h1, h2, h3, h4, strong, li, p');
     for (const el of Array.from(elements)) {
-      if (el.textContent?.toLowerCase().includes(textSnippet.toLowerCase())) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (normalizeText(el.textContent ?? '').includes(needle)) {
+        scrollWithinContainer(el);
         break;
       }
     }
+  };
+
+  /**
+   * Salto a los Puntos I / II / III del desarrollo.
+   *
+   * El contenido real titula los puntos como "**I. …**", "**II. …**",
+   * "**III. …**" (sin la palabra "Punto"), por eso buscar el texto
+   * "Punto I" nunca encontraba destino y los botones 4, 5 y 6 no hacían
+   * nada. Aquí se busca por el numeral romano al inicio del título,
+   * distinguiendo I de II y III, y se ignoran las menciones de la
+   * "Oración de Transición y Vista Previa" (que también los enumera,
+   * pero está antes del desarrollo).
+   */
+  const scrollToMainPoint = (numeral: 'I' | 'II' | 'III') => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const n = numeral.toLowerCase();
+    // `(?![ivx])` evita que "I" coincida con "II"/"III" (y viceversa).
+    const directPattern = new RegExp(`^${n}(?![ivx])\\s*[.):\\-–—]`);
+    const puntoPattern = new RegExp(`^punto\\s+${n}(?![ivx])\\b`);
+
+    const candidates = Array.from(
+      container.querySelectorAll('h1, h2, h3, h4, strong, li, p')
+    );
+
+    // 1) Formato del desarrollo: "I. Título", "II. Título", "III. Título".
+    const direct = candidates.find((el) =>
+      directPattern.test(normalizeText(el.textContent ?? ''))
+    );
+    if (direct) {
+      scrollWithinContainer(direct);
+      return;
+    }
+
+    // 2) Formato alternativo: "Punto I: Título" como encabezado del desarrollo,
+    //    salteando la enumeración de la Vista Previa (lista numerada / párrafo
+    //    de transición ubicado antes del desarrollo).
+    const punto = candidates.find((el) => {
+      const text = normalizeText(el.textContent ?? '');
+      if (!puntoPattern.test(text) || text.length > 220) return false;
+      if (el.closest('ol')) return false; // lista 1-2-3 de la Vista Previa
+      const context = normalizeText(
+        el.closest('p, li')?.textContent ?? text
+      );
+      return (
+        !context.includes('oracion de transicion') &&
+        !context.includes('vista previa') &&
+        !context.includes('de esta gran idea se desprende')
+      );
+    });
+    if (punto) {
+      scrollWithinContainer(punto);
+      return;
+    }
+
+    // 3) Último recurso: cualquier mención al punto.
+    scrollToHeading(`Punto ${numeral}`);
   };
 
   const BoldAsVerse = ({ children }: { children?: React.ReactNode }) => {
@@ -214,9 +317,21 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       <div
         className={`px-4 sm:px-6 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 no-print shadow-md ${headerThemeClasses} font-sans`}
       >
+        {/* Volver a Estudio (bien visible, arriba a la izquierda) */}
+        <button
+          type="button"
+          onClick={onClose}
+          title="Volver al modo estudio"
+          aria-label="Volver a Estudio"
+          className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-extrabold shadow-md transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-5 h-5 shrink-0" />
+          <span>← Volver a Estudio</span>
+        </button>
+
         {/* Title and Clock */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
             Atril / Púlpito
           </span>
           <h2 className="text-sm sm:text-base font-bold truncate max-w-xs sm:max-w-md font-theology-serif">
@@ -228,10 +343,10 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           </div>
         </div>
 
-        {/* Preaching Stopwatch Controls */}
+        {/* Preaching Stopwatch Controls (en celular vive en el widget flotante) */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <div
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-mono text-sm font-bold border transition-colors ${
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-xl font-mono text-sm font-bold border transition-colors ${
               isTimeExceeded
                 ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse'
                 : isTimeWarning
@@ -267,7 +382,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           <select
             value={targetMinutes}
             onChange={(e) => setTargetMinutes(Number(e.target.value))}
-            className="px-2 py-1 rounded-lg text-xs bg-black/20 border border-white/10 text-slate-200 outline-none cursor-pointer"
+            className="hidden md:block px-2 py-1 rounded-lg text-xs bg-black/20 border border-white/10 text-slate-200 outline-none cursor-pointer"
             title="Meta de tiempo de prédica"
           >
             <option value={15}>15 min</option>
@@ -419,21 +534,29 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </button>
         <button
           type="button"
-          onClick={() => scrollToHeading('Punto I')}
+          onClick={() => scrollToHeading('Oración de Transición')}
+          title="Oración de Transición y Vista Previa (Punto I, II y III)"
+          className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
+        >
+          ↪ Vista Previa
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollToMainPoint('I')}
           className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
         >
           4. Punto I
         </button>
         <button
           type="button"
-          onClick={() => scrollToHeading('Punto II')}
+          onClick={() => scrollToMainPoint('II')}
           className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
         >
           5. Punto II
         </button>
         <button
           type="button"
-          onClick={() => scrollToHeading('Punto III')}
+          onClick={() => scrollToMainPoint('III')}
           className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
         >
           6. Punto III
@@ -466,7 +589,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       {/* Main Preaching Content */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-5 sm:px-12 md:px-20 lg:px-32 py-10"
+        className="flex-1 overflow-y-auto px-5 sm:px-12 md:px-20 lg:px-32 pt-10 pb-44"
       >
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
@@ -494,7 +617,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               remarkPlugins={[remarkGfm]}
               components={{ strong: BoldAsVerse }}
             >
-              {content}
+              {displayContent}
             </ReactMarkdown>
           </div>
 
@@ -513,6 +636,107 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Cronómetro flotante: siempre visible sobre el texto, pensado para
+          leerse de un vistazo desde el púlpito con el celular. */}
+      <div
+        className={`absolute right-3 sm:right-6 z-50 no-print font-sans rounded-3xl border shadow-2xl backdrop-blur-md px-4 py-3 w-[calc(100%-1.5rem)] max-w-[300px] sm:max-w-[320px] ${
+          isTimeExceeded
+            ? 'bg-red-950/90 border-red-500/60'
+            : isTimeWarning
+            ? 'bg-amber-950/90 border-amber-500/60'
+            : 'bg-slate-950/90 border-white/20'
+        }`}
+        style={{ bottom: 'max(0.85rem, env(safe-area-inset-bottom))' }}
+        role="timer"
+        aria-label={`Cronómetro de prédica: ${formatTimer(timerSeconds)} de ${targetMinutes} minutos`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-300">
+            <Timer className={`w-4 h-4 ${isTimerRunning ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
+            Cronómetro
+          </span>
+          <select
+            value={targetMinutes}
+            onChange={(e) => setTargetMinutes(Number(e.target.value))}
+            className="px-1.5 py-1 rounded-lg text-[11px] font-semibold bg-white/10 border border-white/15 text-slate-100 outline-none cursor-pointer"
+            title="Meta de tiempo de prédica"
+            aria-label="Meta de tiempo de prédica"
+          >
+            <option value={15} className="bg-slate-900">Meta 15m</option>
+            <option value={20} className="bg-slate-900">Meta 20m</option>
+            <option value={25} className="bg-slate-900">Meta 25m</option>
+            <option value={30} className="bg-slate-900">Meta 30m</option>
+            <option value={40} className="bg-slate-900">Meta 40m</option>
+            <option value={45} className="bg-slate-900">Meta 45m</option>
+          </select>
+        </div>
+
+        <div className="flex items-end justify-between gap-3 mt-1">
+          <span
+            className={`font-mono font-extrabold tabular-nums leading-none text-5xl sm:text-6xl ${
+              isTimeExceeded
+                ? 'text-red-400 animate-pulse'
+                : isTimeWarning
+                ? 'text-amber-300'
+                : 'text-emerald-400'
+            }`}
+          >
+            {formatTimer(timerSeconds)}
+          </span>
+          <div className="flex items-center gap-1.5 pb-1">
+            <button
+              type="button"
+              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              title={isTimerRunning ? 'Pausar cronómetro' : 'Iniciar cronómetro de prédica'}
+              aria-label={isTimerRunning ? 'Pausar cronómetro' : 'Iniciar cronómetro de prédica'}
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-md transition-colors cursor-pointer ${
+                isTimerRunning
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  : 'bg-emerald-600 hover:bg-emerald-500'
+              }`}
+            >
+              {isTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsTimerRunning(false);
+                setTimerSeconds(0);
+              }}
+              title="Reiniciar cronómetro"
+              aria-label="Reiniciar cronómetro"
+              className="w-11 h-11 rounded-2xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-slate-200 border border-white/15 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Progreso hacia la meta */}
+        <div className="mt-2.5">
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 ${
+                isTimeExceeded ? 'bg-red-500' : isTimeWarning ? 'bg-amber-400' : 'bg-emerald-500'
+              }`}
+              style={{
+                width: `${targetSeconds > 0 ? Math.min(100, (timerSeconds / targetSeconds) * 100) : 0}%`,
+              }}
+            />
+          </div>
+          <p className="mt-1 text-[11px] font-medium text-slate-300 flex items-center justify-between">
+            <span>
+              {isTimeExceeded
+                ? `Te pasaste de la meta (${targetMinutes} min)`
+                : isTimeWarning
+                ? '¡Últimos 5 minutos!'
+                : `Meta: ${targetMinutes} min`}
+            </span>
+            {currentClock && <span className="font-mono text-slate-400">🕐 {currentClock}</span>}
+          </p>
         </div>
       </div>
     </div>

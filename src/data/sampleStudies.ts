@@ -91,6 +91,12 @@ export const INITIAL_FEATURED_STUDY = {
 - **Proposición (La Gran Idea):** 
   *Nuestra salvación es un regalo inmerecido de la gracia de Dios recibido por la fe, cuyo destino eterno es una vida activa de buenas obras en Cristo.*
 
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: El Origen y el Canal de la Salvación (v. 8)**; en segundo lugar, **Punto II: La Exclusión Total de la Jactancia (v. 9)**; y en tercer lugar, **Punto III: El Propósito Eterno de la Nueva Creación (v. 10)**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** El Origen y el Canal de la Salvación (v. 8)
+  2. **Punto II:** La Exclusión Total de la Jactancia (v. 9)
+  3. **Punto III:** El Propósito Eterno de la Nueva Creación (v. 10)
+
 - **Desarrollo de Puntos Principales:**
   - **I. El Origen y el Canal de la Salvación (v. 8):**
     - *A. La causa soberana:* La gracia inmerecida de Dios (*charis*), no nuestras obras religiosas o morales.
@@ -170,6 +176,12 @@ export const MASTER_CURATED_STUDIES: Array<{
 - **Proposición (La Gran Idea):** 
   *El propósito eterno de Dios garantiza que ninguna circunstancia, por dolorosa que sea, puede impedir nuestra transformación a la imagen de Cristo y nuestra victoria final.*
 
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: La Certeza Providencial en la Aflicción (v. 28)**; en segundo lugar, **Punto II: El Fin Supremo de la Providencia (v. 29)**; y en tercer lugar, **Punto III: La Cadena Dorada e Irrompible de la Gracia (v. 30)**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** La Certeza Providencial en la Aflicción (v. 28)
+  2. **Punto II:** El Fin Supremo de la Providencia (v. 29)
+  3. **Punto III:** La Cadena Dorada e Irrompible de la Gracia (v. 30)
+
 - **Desarrollo de Puntos Principales:**
   - **I. La Certeza Providencial en la Aflicción (v. 28):**
     - *A. Una convicción madura:* "Y sabemos" (*oidamen*); no una duda ni un optimismo ingenuo, sino certeza teológica.
@@ -230,6 +242,12 @@ export const MASTER_CURATED_STUDIES: Array<{
 
 - **Proposición (La Gran Idea):** 
   *Porque el Señor es nuestro Pastor soberano y fiel, tenemos provisión suficiente en la calma, presencia consoladora en el dolor y comunión eterna en Su presencia.*
+
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: La Provisión y Guía en Aguas de Reposo (vv. 1-3)**; en segundo lugar, **Punto II: La Presencia y Consuelo en el Valle Oscuro (v. 4)**; y en tercer lugar, **Punto III: El Banquete y la Esperanza Eterna (vv. 5-6)**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** La Provisión y Guía en Aguas de Reposo (vv. 1-3)
+  2. **Punto II:** La Presencia y Consuelo en el Valle Oscuro (v. 4)
+  3. **Punto III:** El Banquete y la Esperanza Eterna (vv. 5-6)
 
 - **Desarrollo de Puntos Principales:**
   - **I. La Provisión y Guía en Aguas de Reposo (vv. 1-3):**
@@ -293,6 +311,12 @@ export const MASTER_CURATED_STUDIES: Array<{
 - **Proposición (La Gran Idea):** 
   *En Jesucristo, el Verbo eterno se hizo hombre para revelarnos la plenitud de Dios y otorgar a quienes creen la potestad de ser hechos hijos de Dios.*
 
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: La Deidad Eterna del Verbo (vv. 1-5)**; en segundo lugar, **Punto II: El Rechazo Humano y el Privilegio de la Adopción (vv. 9-13)**; y en tercer lugar, **Punto III: El Misterio Glorioso de la Encarnación (v. 14)**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** La Deidad Eterna del Verbo (vv. 1-5)
+  2. **Punto II:** El Rechazo Humano y el Privilegio de la Adopción (vv. 9-13)
+  3. **Punto III:** El Misterio Glorioso de la Encarnación (v. 14)
+
 - **Desarrollo de Puntos Principales:**
   - **I. La Deidad Eterna del Verbo (vv. 1-5):**
     - *A. Coexistencia eterna:* "En el principio era el Verbo"; preexistencia antes de todo tiempo.
@@ -354,6 +378,12 @@ export const MASTER_CURATED_STUDIES: Array<{
 
 - **Proposición (La Gran Idea):** 
   *La verdadera bienaventuranza eterna no proviene del éxito terrenal, sino de la gracia que transforma nuestro carácter a la imagen del Rey Jesús.*
+
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: La Postura del Corazón ante Dios (vv. 3-6)**; en segundo lugar, **Punto II: La Conducta del Creyente hacia el Prójimo (vv. 7-9)**; y en tercer lugar, **Punto III: El Costo y la Recompensa de la Fidelidad (vv. 10-12)**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** La Postura del Corazón ante Dios (vv. 3-6)
+  2. **Punto II:** La Conducta del Creyente hacia el Prójimo (vv. 7-9)
+  3. **Punto III:** El Costo y la Recompensa de la Fidelidad (vv. 10-12)
 
 - **Desarrollo de Puntos Principales:**
   - **I. La Postura del Corazón ante Dios (vv. 3-6):**
@@ -417,6 +447,12 @@ export const MASTER_CURATED_STUDIES: Array<{
 
 - **Proposición (La Gran Idea):** 
   *Reemplazar la ansiedad por la oración agradecida y gozosa en el Señor llena nuestras vidas de una paz sobrenatural que custodia nuestro corazón y renueva nuestros pensamientos.*
+
+- **Oración de Transición y Vista Previa:**
+  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: El Mandato del Gozo y la Mansedumbre (vv. 4-5)**; en segundo lugar, **Punto II: El Antídoto Divino contra la Ansiedad (vv. 6-7)**; y en tercer lugar, **Punto III: La Dieta Mental del Creyente Victorioso (vv. 8-9)**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*
+  1. **Punto I:** El Mandato del Gozo y la Mansedumbre (vv. 4-5)
+  2. **Punto II:** El Antídoto Divino contra la Ansiedad (vv. 6-7)
+  3. **Punto III:** La Dieta Mental del Creyente Victorioso (vv. 8-9)
 
 - **Desarrollo de Puntos Principales:**
   - **I. El Mandato del Gozo y la Mansedumbre (vv. 4-5):**

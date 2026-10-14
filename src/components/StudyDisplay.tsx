@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { parseBiblicalStudySections } from '../utils/sectionParser';
+import { ensureOutlineTransition } from '../utils/outlineTransition';
 import { exportStudyToPdf } from '../utils/pdfExport';
 
 interface StudyDisplayProps {
@@ -47,18 +48,22 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
   const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif');
   const [sharedToast, setSharedToast] = useState(false);
 
-  const sections = parseBiblicalStudySections(content);
+  // Garantiza la "Oración de Transición y Vista Previa" (Punto I, II y III)
+  // inmediatamente después de la Proposición, también en bosquejos generados
+  // por IA o guardados que aún no la traigan.
+  const displayContent = ensureOutlineTransition(content);
+  const sections = parseBiblicalStudySections(displayContent);
   const hasParsedSections = Boolean(
     sections.section1 || sections.section2 || sections.section3 || sections.section4
   );
 
   // Stats
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const wordCount = displayContent.trim() ? displayContent.trim().split(/\s+/).length : 0;
   // Estimate ~120 words per minute for expository preaching
   const estimatedPreachingMinutes = Math.max(1, Math.round(wordCount / 120));
 
   const handleCopyAll = () => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(displayContent);
     setCopiedAll(true);
     setTimeout(() => setCopiedAll(false), 2000);
   };
@@ -75,7 +80,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
         // user cancelled or share failed
       }
     } else {
-      navigator.clipboard.writeText(`${passageOrTopic}\n\n${content}`);
+      navigator.clipboard.writeText(`${passageOrTopic}\n\n${displayContent}`);
       setSharedToast(true);
       setTimeout(() => setSharedToast(false), 2000);
     }
@@ -99,7 +104,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
       exportStudyToPdf({
         passageOrTopic,
         translation,
-        content,
+        content: displayContent,
         personalNotes,
       });
     } catch (err) {
@@ -355,7 +360,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
               id="seccion-2-bosquejo"
               sectionNumber={2}
               title="Bosquejo Expositivo (Sencillo y Profundo)"
-              subtitle="Introducción, Proposición (Gran Idea), Desarrollo homilético y Reflexión Teológica"
+              subtitle="Introducción, Proposición (Gran Idea), Oración de Transición y Vista Previa (Punto I, II y III), Desarrollo homilético y Reflexión Teológica"
               content={sections.section2}
               iconName="file"
               accentColor="indigo"
@@ -406,7 +411,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
             }`}
           >
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {content}
+              {displayContent}
             </ReactMarkdown>
           </div>
         </div>
