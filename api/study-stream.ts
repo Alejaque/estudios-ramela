@@ -1,26 +1,30 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildMessages, getHeaders, MODEL_CANDIDATES, OPENROUTER_API_URL, isRetryable, errorMsg, sleep } from './_shared.js';
+import { generateTheologicalStudy } from '../src/utils/theologicalEngine.js';
 
-// Vercel serverless timeout máximo en plan free: 10s
-// El streaming real no funciona bien en serverless, usamos acumulación y enviamos todo junto como SSE
-export const maxDuration = 60; // Pro plan; en free será ignorado pero no rompe
+export const maxDuration = 60;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { passageOrTopic, userPrompt } = req.body;
+  const { passageOrTopic, userPrompt, translationPreference } = req.body;
   if (!passageOrTopic && !userPrompt) {
     return res.status(400).json({ error: 'Debes proporcionar un pasaje bíblico, tema o consulta.' });
   }
 
-  // En serverless, el streaming real es limitado.
-  // Llamamos sin stream, acumulamos y enviamos como un único evento SSE.
-  // El frontend lo maneja igual porque recibe { text } y luego { done }.
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+
+  // If OPENROUTER_API_KEY is missing, stream local theological study
+  if (!process.env.OPENROUTER_API_KEY) {
+    const study = generateTheologicalStudy(passageOrTopic || userPrompt || 'Efesios 2:8-10', translationPreference);
+    res.write(`data: ${JSON.stringify({ text: study })}\n\n`);
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    return res.end();
+  }
 
   const chatMessages = buildMessages(req.body);
   let generatedText = '';
@@ -64,12 +68,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!generatedText) {
-    const msg = errorMsg(lastStatus, lastBody);
-    res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
+    // Graceful fallback to theological engine
+    const fallbackStudy = generateTheologicalStudy(passageOrTopic || userPrompt || 'Efesios 2:8-10', translationPreference);
+    res.write(`data: ${JSON.stringify({ text: fallbackStudy })}\n\n`);
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     return res.end();
   }
 
-  // Enviamos el texto completo en un solo evento y luego done
   res.write(`data: ${JSON.stringify({ text: generatedText })}\n\n`);
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
   return res.end();

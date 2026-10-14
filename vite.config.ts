@@ -1,14 +1,73 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
-import {VitePWA} from 'vite-plugin-pwa';
+import { defineConfig, Plugin } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+
+function devApiPlugin(): Plugin {
+  return {
+    name: 'dev-api-middleware',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (req.url?.startsWith('/api/study/stream') && req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk) => (body += chunk));
+          req.on('end', async () => {
+            try {
+              const parsed = JSON.parse(body || '{}');
+              const { passageOrTopic, userPrompt, translationPreference } = parsed;
+              res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+              res.setHeader('Cache-Control', 'no-cache');
+              res.setHeader('Connection', 'keep-alive');
+
+              const { generateTheologicalStudy } = await import('./src/utils/theologicalEngine.js');
+              const target = passageOrTopic || userPrompt || 'Efesios 2:8-10';
+              const text = generateTheologicalStudy(target, translationPreference);
+
+              res.write(`data: ${JSON.stringify({ text })}\n\n`);
+              res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+              res.end();
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err?.message || 'Error en servidor local' }));
+            }
+          });
+          return;
+        }
+
+        if (req.url?.startsWith('/api/study') && req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk) => (body += chunk));
+          req.on('end', async () => {
+            try {
+              const parsed = JSON.parse(body || '{}');
+              const { passageOrTopic, userPrompt, translationPreference } = parsed;
+              const { generateTheologicalStudy } = await import('./src/utils/theologicalEngine.js');
+              const target = passageOrTopic || userPrompt || 'Efesios 2:8-10';
+              const text = generateTheologicalStudy(target, translationPreference);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ text }));
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err?.message || 'Error en servidor local' }));
+            }
+          });
+          return;
+        }
+
+        next();
+      });
+    },
+  };
+}
 
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
+      devApiPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'portada-alejandro-ramela.jpg'],
@@ -88,10 +147,10 @@ export default defineConfig(() => {
       },
     },
     server: {
+      host: '0.0.0.0',
+      allowedHosts: true as true,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };

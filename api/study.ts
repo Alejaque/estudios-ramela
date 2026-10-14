@@ -1,14 +1,21 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildMessages, getHeaders, MODEL_CANDIDATES, OPENROUTER_API_URL, isRetryable, errorMsg, sleep } from './_shared.js';
+import { generateTheologicalStudy } from '../src/utils/theologicalEngine.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { passageOrTopic, userPrompt } = req.body;
+  const { passageOrTopic, userPrompt, translationPreference } = req.body;
   if (!passageOrTopic && !userPrompt) {
     return res.status(400).json({ error: 'Debes proporcionar un pasaje bíblico, tema o consulta.' });
+  }
+
+  // If OPENROUTER_API_KEY is not configured, gracefully fallback to the theological engine
+  if (!process.env.OPENROUTER_API_KEY) {
+    const study = generateTheologicalStudy(passageOrTopic || userPrompt || 'Efesios 2:8-10', translationPreference);
+    return res.json({ text: study });
   }
 
   const chatMessages = buildMessages(req.body);
@@ -53,7 +60,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!generatedText) {
-    return res.status(500).json({ error: errorMsg(lastStatus, lastBody) });
+    // Graceful fallback to the theological engine if AI endpoint is exhausted or down
+    const fallbackStudy = generateTheologicalStudy(passageOrTopic || userPrompt || 'Efesios 2:8-10', translationPreference);
+    return res.json({ text: fallbackStudy });
   }
 
   return res.json({ text: generatedText });
