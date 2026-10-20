@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BookOpen, Library, Maximize2, Moon, Sun, Search, X, FileDown, PenLine, ChevronRight } from 'lucide-react';
+import { CoverHero } from './components/CoverHero';
 import { BibleVerseModal } from './components/BibleVerseModal';
 import { PulpitModal } from './components/PulpitModal';
 import { PersonalNotes } from './components/PersonalNotes';
@@ -43,6 +44,7 @@ export default function App() {
   <div><div className="text-[10px] tracking-[0.22em] uppercase text-[#627467] dark:text-[#b1c3b6] font-bold">Biblioteca del expositor</div><h1 className="font-serif font-bold text-xl sm:text-2xl">Alejandro Ramela</h1></div>
   <div className="flex items-center gap-2"><button aria-label="Cambiar tema" onClick={()=>{setDark(!dark);localStorage.setItem('library_dark',String(!dark));}} className="p-3 rounded-full border border-[#bbc9bd]">{dark?<Sun size={20}/>:<Moon size={20}/>}</button><button onClick={()=>setPulpit(true)} className="rounded-xl bg-[#315b46] text-white px-4 py-3 font-semibold flex gap-2 items-center"><Maximize2 size={18}/><span className="hidden sm:inline">Modo </span>Púlpito</button></div>
  </header>
+ <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-5"><CoverHero/></div>
  <nav className="max-w-7xl mx-auto px-4 sm:px-8 pt-5 flex gap-3"><button className="library-control" aria-pressed={!isDraft} onClick={()=>{setMode('library');load(JUAN);}}>Biblioteca</button><button className="library-control" aria-pressed={isDraft} onClick={()=>{setMode('drafts');if(drafts[0])load(drafts[0]);}}>Borradores</button></nav>
  <main className="max-w-7xl mx-auto p-4 sm:p-8 grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
  <aside className="lg:sticky lg:top-28"><div className="flex items-center justify-between mb-4"><h2 className="font-serif text-2xl flex gap-2 items-center"><Library size={22}/> {isDraft?'Borradores':'Tus estudios'}</h2><PWAInstallButton variant="header"/></div>
