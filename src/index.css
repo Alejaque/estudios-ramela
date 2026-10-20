@@ -58,6 +58,7 @@
 .markdown-theology {
   line-height: 1.8;
   color: #334155;
+  font-weight: 500;
 }
 
 .markdown-theology h1 {
@@ -108,7 +109,7 @@
 
 .markdown-theology p {
   margin-bottom: 0.95rem;
-  font-size: 1rem;
+  font-size: 1em;
 }
 
 .markdown-theology ul {
@@ -130,7 +131,7 @@
 
 .markdown-theology strong {
   color: #0f172a;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .markdown-theology blockquote {
@@ -169,7 +170,7 @@
 
 .dark .markdown-theology h3 {
   color: #93c5fd;
-  background: #1e293b/80;
+  background: #1e293b;
   border-left-color: #3b82f6;
 }
 
@@ -183,7 +184,7 @@
 
 .dark .markdown-theology blockquote {
   border-left-color: #818cf8;
-  background-color: #0f172a/90;
+  background-color: #0f172a;
   color: #94a3b8;
 }
 
@@ -270,3 +271,18 @@
   background: #0f172a;
   border-color: #334155;
 }
+
+/* Reading size controls every paragraph, list and heading in the pulpit. */
+.pulpit-view .pulpit-markdown {
+  font-weight: 500;
+}
+.pulpit-view .pulpit-markdown p {
+  font-size: 1em;
+}
+.pulpit-view .pulpit-markdown :is(h1, h2, h3, h4, strong) {
+  font-weight: 700;
+}
+.pulpit-view .pulpit-markdown h1 { font-size: 1.55em; }
+.pulpit-view .pulpit-markdown h2 { font-size: 1.35em; }
+.pulpit-view .pulpit-markdown h3 { font-size: 1.15em; }
+.pulpit-view .pulpit-markdown h4 { font-size: 1.05em; }
