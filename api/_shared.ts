@@ -131,6 +131,7 @@ export async function requestFreeStudy(body: any, budgetMs = 45000) {
       });
       if (!response.ok) {
         lastError = `Proveedor gratuito no disponible (${response.status}).`;
+        console.info('free-study-attempt', { model, status: response.status, elapsedMs: Date.now() - started });
         if ([401, 402, 403].includes(response.status)) break;
         continue;
       }
@@ -144,6 +145,7 @@ export async function requestFreeStudy(body: any, budgetMs = 45000) {
       lastError = 'El proveedor devolvió una respuesta vacía.';
     } catch (error: any) {
       if (error?.message?.includes('incompleto')) throw error;
+      console.info('free-study-attempt', { model, status: controller.signal.aborted ? 'timeout' : 'network_error', elapsedMs: Date.now() - started });
       lastError = controller.signal.aborted ? 'El proveedor gratuito no respondió dentro del tiempo disponible.' : 'No se pudo contactar al proveedor gratuito.';
     } finally { clearTimeout(timer); }
   }
