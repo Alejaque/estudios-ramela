@@ -112,3 +112,40 @@ export function errorMsg(status: number, body: any): string {
 }
 
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+// One budget covers all free-model attempts, including response-body reads.
+export async function requestFreeStudy(body: any, budgetMs = 45000) {
+  const started = Date.now();
+  const messages = buildMessages(body);
+  let lastError = 'No se pudo obtener una respuesta de los modelos gratuitos.';
+  if (!process.env.OPENROUTER_API_KEY) throw new Error('Proveedor gratuito no configurado.');
+  for (const model of MODEL_CANDIDATES) {
+    const remaining = budgetMs - (Date.now() - started);
+    if (remaining <= 0) break;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), Math.min(15000, remaining));
+    try {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST', headers: getHeaders(), signal: controller.signal,
+        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: 4096 }),
+      });
+      if (!response.ok) {
+        lastError = `Proveedor gratuito no disponible (${response.status}).`;
+        if ([401, 402, 403].includes(response.status)) break;
+        continue;
+      }
+      const data = await response.json();
+      const choice = data.choices?.[0];
+      const text = choice?.message?.content;
+      if (choice?.finish_reason === 'length') throw new Error('El estudio superó el límite de salida y quedó incompleto.');
+      if (typeof text === 'string' && text.trim()) {
+        return { text, model: data.model || model, durationMs: Date.now() - started };
+      }
+      lastError = 'El proveedor devolvió una respuesta vacía.';
+    } catch (error: any) {
+      if (error?.message?.includes('incompleto')) throw error;
+      lastError = controller.signal.aborted ? 'El proveedor gratuito no respondió dentro del tiempo disponible.' : 'No se pudo contactar al proveedor gratuito.';
+    } finally { clearTimeout(timer); }
+  }
+  throw new Error(lastError);
+}
