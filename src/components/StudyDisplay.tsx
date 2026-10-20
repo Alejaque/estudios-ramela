@@ -45,7 +45,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
   const [activeTab, setActiveTab] = useState<'all' | '1' | '2' | '3' | '4'>('all');
   const [copiedAll, setCopiedAll] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [fontSize, setFontSize] = useState<number>(16);
+  const [fontSize, setFontSize] = useState<number>(20);
   const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif');
   const [sharedToast, setSharedToast] = useState(false);
   const [verseRef, setVerseRef] = useState<string | null>(null);
@@ -172,7 +172,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
               <span className="px-1 text-[11px] text-slate-400">{fontSize}px</span>
               <button
                 type="button"
-                onClick={() => setFontSize((s) => Math.min(22, s + 1))}
+                onClick={() => setFontSize((s) => Math.min(28, s + 1))}
                 title="Aumentar tamaño de letra"
                 className="px-2 py-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 font-semibold cursor-pointer"
               >
