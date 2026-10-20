@@ -15,6 +15,7 @@ export interface StudyOptions {
 }
 
 export interface SavedStudy {
+  studyStyle?: string;
   id: string;
   title: string;
   passageOrTopic: string;

@@ -5,6 +5,8 @@ import { RecentSearch } from '../types';
 
 interface StudyInputProps {
   onStudy: (passageOrTopic: string, translation: string) => void;
+  studyStyle: string;
+  onStyleChange: (style: string) => void;
   isLoading: boolean;
   activePassage: string;
   recentSearches: RecentSearch[];
@@ -48,6 +50,8 @@ const CANONICAL_CATEGORIES = [
 
 export const StudyInput: React.FC<StudyInputProps> = ({
   onStudy,
+  studyStyle,
+  onStyleChange,
   isLoading,
   activePassage,
   recentSearches,
@@ -121,6 +125,21 @@ export const StudyInput: React.FC<StudyInputProps> = ({
           </span>
         </div>
       </div>
+
+      <label className="mb-3 flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+        Formato del próximo estudio
+        <select
+          aria-label="Formato del próximo estudio"
+          value={studyStyle}
+          onChange={(e) => onStyleChange(e.target.value)}
+          disabled={isLoading}
+          className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+        >
+          <option value="continuous">Exposición continua</option>
+          <option value="classic">Clásico</option>
+        </select>
+      </label>
+      <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">El formato se aplica al generar un estudio nuevo. No modifica tus bosquejos guardados.</p>
 
       {/* Main Search Bar Form */}
       <form onSubmit={handleSubmit} className="relative mb-3">

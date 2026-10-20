@@ -25,7 +25,7 @@ import {
   LocateFixed,
 } from 'lucide-react';
 import { exportStudyToPdf } from '../utils/pdfExport';
-import { ensureOutlineTransition } from '../utils/outlineTransition';
+import { ensureOutlineTransition, extractMainPoints, type MainPoint } from '../utils/outlineTransition';
 import { useModalBackButton } from '../hooks/useModalBackButton';
 import { BibleVerseModal } from './BibleVerseModal';
 
@@ -408,7 +408,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
    * "Oración de Transición y Vista Previa" (que también los enumera,
    * pero está antes del desarrollo).
    */
-  const scrollToMainPoint = (numeral: 'I' | 'II' | 'III') => {
+  const scrollToMainPoint = (numeral: MainPoint['numeral']) => {
     const container = scrollContainerRef.current;
     if (!container) return;
     const n = numeral.toLowerCase();
@@ -701,33 +701,18 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </button>
         <button
           type="button"
-          onClick={() => scrollToHeading('Oración de Transición')}
-          title="Oración de Transición y Vista Previa (Punto I, II y III)"
+          onClick={() => scrollToHeading(/bosquejo general/i.test(displayContent) ? 'Bosquejo General' : 'Oración de Transición')}
+          title="Bosquejo y vista previa del pasaje"
           className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
         >
           ↪ Vista Previa
         </button>
-        <button
-          type="button"
-          onClick={() => scrollToMainPoint('I')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          4. Punto I
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToMainPoint('II')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          5. Punto II
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToMainPoint('III')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          6. Punto III
-        </button>
+        {extractMainPoints(displayContent).map((point) => (
+          <button key={point.numeral} type="button" onClick={() => scrollToMainPoint(point.numeral)}
+            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer">
+            {point.label}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => scrollToHeading('Aplicación')}

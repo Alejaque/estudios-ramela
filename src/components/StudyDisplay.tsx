@@ -118,6 +118,11 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
 
   return (
     <div className="space-y-5">
+      {content.includes('Borrador a revisar:') && (
+        <div role="note" className="rounded-2xl border-2 border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-100 p-4 font-semibold">
+          Borrador a revisar: contrastá con la Biblia. Puede contener errores de contexto, referencias o interpretación. No es un estudio verificado.
+        </div>
+      )}
       {verseRef && (
         <BibleVerseModal
           reference={verseRef}

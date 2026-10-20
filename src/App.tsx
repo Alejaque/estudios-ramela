@@ -54,6 +54,8 @@ export default function App() {
   const [passageOrTopic, setPassageOrTopic] = useState(INITIAL_FEATURED_STUDY.passageOrTopic);
   const [translation, setTranslation] = useState(INITIAL_FEATURED_STUDY.translation);
   const [content, setContent] = useState(INITIAL_FEATURED_STUDY.content);
+  const [studyStyle, setStudyStyle] = useState('continuous');
+  const [activeStudyStyle, setActiveStudyStyle] = useState('classic');
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -239,6 +241,7 @@ export default function App() {
       setIsSpeaking(false);
     }
 
+    setActiveStudyStyle(studyStyle);
     setPassageOrTopic(targetPassage);
     setTranslation(chosenTranslation);
     saveToRecentHistory(targetPassage, chosenTranslation);
@@ -255,14 +258,19 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    let providerError = '';
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 50000);
 
     try {
-      const response = await fetch('/api/study/stream', {
+      const response = await fetch('/api/study-stream', {
+        signal: controller.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           passageOrTopic: targetPassage,
           translationPreference: chosenTranslation,
+            studyStyle,
         }),
       });
 
@@ -293,6 +301,7 @@ export default function App() {
                 }
                 if (data.error) {
                   streamFailed = true;
+                  providerError = data.error;
                   throw new Error(data.error);
                 }
               } catch (parseErr: any) {
@@ -308,28 +317,12 @@ export default function App() {
       streamFailed = true;
     }
 
-    // Direct JSON fallback endpoint
+    window.clearTimeout(timer);
     if (streamFailed || !accumulatedText.trim()) {
-      try {
-        const fallbackRes = await fetch('/api/study', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            passageOrTopic: targetPassage,
-            translationPreference: chosenTranslation,
-          }),
-        });
-
-        if (fallbackRes.ok) {
-          const data = await fallbackRes.json();
-          if (data.text) {
-            accumulatedText = data.text;
-            setContent(accumulatedText);
-          }
-        }
-      } catch {
-        // Backend offline or unreachable
-      }
+      setErrorMsg((providerError || 'El proveedor gratuito no pudo completar el estudio en el tiempo disponible.') + ' Reintentá más tarde. No se sustituyó por un bosquejo local.');
+      setIsLoading(false);
+      setIsStreaming(false);
+      return;
     }
 
     // Ultimate fallback: Our rich, scholarly Theological Engine
@@ -381,6 +374,9 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    let providerError = '';
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 50000);
 
     try {
       const history = [
@@ -394,12 +390,14 @@ export default function App() {
         })),
       ];
 
-      const response = await fetch('/api/study/stream', {
+      const response = await fetch('/api/study-stream', {
+        signal: controller.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           passageOrTopic,
           translationPreference: translation,
+          studyStyle: activeStudyStyle,
           messages: history,
           userPrompt: userText,
         }),
@@ -445,6 +443,7 @@ export default function App() {
       streamFailed = true;
     }
 
+    window.clearTimeout(timer);
     if (streamFailed || !accumulatedText.trim()) {
       // Local intelligent response generator
       accumulatedText = generateFollowUpResponse(userText, passageOrTopic);
@@ -494,6 +493,7 @@ export default function App() {
         passageOrTopic,
         content,
         translation,
+        studyStyle: activeStudyStyle,
         createdAt: new Date().toISOString(),
       };
       setSavedStudies((prev) => [newSaved, ...prev]);
@@ -504,6 +504,7 @@ export default function App() {
   const handleSelectSavedStudy = (study: SavedStudy) => {
     setPassageOrTopic(study.passageOrTopic);
     if (study.translation) setTranslation(study.translation);
+    setActiveStudyStyle(study.studyStyle || 'classic');
     setContent(study.content);
     setChatMessages([]);
     setIsSavedModalOpen(false);
@@ -554,6 +555,8 @@ export default function App() {
         {/* Input Bar with Canonical Explorer, Autocomplete and Recent History */}
         <StudyInput
           onStudy={handleGenerateStudy}
+          studyStyle={studyStyle}
+          onStyleChange={setStudyStyle}
           isLoading={isLoading}
           activePassage={passageOrTopic}
           recentSearches={recentHistory}
@@ -724,4 +727,4 @@ export default function App() {
       <OfflineIndicator />
     </div>
   );
-}
+                  }

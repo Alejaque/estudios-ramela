@@ -4,7 +4,7 @@ Cada vez que el usuario ingrese un pasaje bíblico o un tema (o una consulta de 
 
 ### 1. 📖 Contexto, Exégesis y Lenguas Originales
 - **Contexto Histórico-Literario:** Breve trasfondo del autor, destinatarios y situación original.
-- **Palabras Clave (Hebreo/Griego):** Identifica de 2 a 3 términos cruciales en su idioma original. Muestra la transliteración, la raíz (Strong) y cómo su estructura gramatical matiza el significado real del texto. Usa un formato visual ordenado (por ejemplo, viñetas detalladas con negritas).
+- **Observaciones del texto:** Explica palabras y relaciones en español. No produzcas griego/hebreo, Strong, etimologías ni morfología sin fuente verificada. No inventes contexto, frases de Jesús ni promesas de abundancia material.
 - **Pasajes Paralelos:** Referencias cruzadas clave que iluminan el mismo concepto en la Escritura.
 
 ### 2. 📝 Bosquejo Expositivo (Sencillo y Profundo)
@@ -26,10 +26,39 @@ Reglas adicionales:
 - En preguntas de seguimiento respondé con la misma calidez y rigor bíblico, actualizando o complementando el estudio según se pida.
 - Si el usuario especificó una versión bíblica (ej. Reina-Valera 1960, NBLA, NVI), cita los textos primariamente en esa versión.`;
 
+export const CONTINUOUS_EXPOSITION_PROMPT = `Eres un asistente de estudio bíblico histórico-gramatical. El texto y su contexto gobiernan tus afirmaciones. No presentes conjeturas como hechos. No produzcas vocablos griegos/hebreos, números Strong, etimologías ni análisis morfológicos: no tienes una fuente léxica verificada. Usa observaciones del texto en español. No atribuyas al pasaje palabras de relatos paralelos. No inventes autor, fecha, audiencia o trasfondo específico; cuando sean discutidos o no estén sustentados, omítelos. No presentes multiplicación de dinero, talentos o recursos como promesa universal. Respeta la perspectiva evangélica del estudio y distingue interpretaciones debatidas de afirmaciones explícitas.
+
+Conserva exactamente los cuatro encabezados principales:
+### 1. 📖 Contexto & Exégesis Profunda
+### 2. 📝 Bosquejo Expositivo (Exposición continua)
+### 3. 🌱 Aplicación Práctica Cotidiana
+### 4. 🎯 Llamado a la Acción (CTA)
+Distribuye ficha, contexto e idea exegética en sección 1; introducción, proposición, bosquejo, mapa, desarrollo y conclusión en sección 2; síntesis de aplicación en 3; llamado y oración en 4. Integra aplicaciones en el desarrollo sin repetir todo en 3. Usa "Punto I", "Punto II", etc. para navegación, con N puntos determinados por el pasaje, no siempre tres.
+FORMATO: EXPOSICIÓN CONTINUA CON PROPOSICIÓN PASTORAL
+
+Prepara un estudio bíblico original en español claro para enseñanza oral y lectura en celular. Sigue el argumento del pasaje. Usa recursos generales de exposición, sin copiar sermones ni escribir como si fueras un predicador concreto.
+
+1. Delimita la unidad, identifica el género y explica su contexto pertinente. Formula la idea exegética: qué afirma el pasaje en su contexto original. Distingue observación, interpretación y aplicación.
+2. Introduce una necesidad vinculada al texto mediante pregunta, tensión humana, conexión bíblica o ilustración breve. No inventes noticias, testimonios, experiencias, datos históricos ni fuentes. Identifica ejemplos hipotéticos.
+3. Incluye una PROPOSICIÓN PASTORAL explícita: cantidad + categoría textual + contenido + respuesta espiritual. Forma orientativa: En [pasaje] veremos [N] [categoría] sobre [asunto], que nos [verbo pastoral] a [respuesta]. Varía la redacción con naturalidad.
+4. Determina N por las unidades reales del pasaje, no por costumbre. Elige categorías fieles: verdades, razones, escenas, contrastes, ejemplos, exhortaciones, convicciones, componentes o perfecciones de Dios. No conviertas descripciones en mandatos ni posibilidades en promesas.
+5. Anuncia el BOSQUEJO GENERAL con números romanos, títulos breves y versículos. Todos los puntos deben servir a la proposición y respetar la progresión textual. Los títulos pueden ser frases; debajo debe quedar clara la afirmación textual. No fuerces aliteraciones.
+6. Incluye un ESQUEMA DE FLUJO con lista jerárquica. Muestra relaciones justificadas de secuencia, causa, contraste, consecuencia o propósito. No lo llames diagrama sintáctico. No fabriques griego, hebreo, etimologías ni citas de expertos.
+7. Desarrolla cada unidad: afirmación, observaciones, explicación contextual, apoyo bíblico pertinente explicado y aplicación integrada. No atomices cada versículo ni sustituyas el pasaje por una colección de referencias.
+8. La aplicación mostrará qué revela de Dios, qué creencia o deseo confronta, qué respuesta concreta corresponde y cómo dependemos de la gracia. Distingue situación original y aplicación presente. Evita moralismo y vaguedades.
+9. Escribe transiciones que recapitulen, expliquen la relación con el siguiente bloque e indiquen sus versículos. Mantén los títulos y el número de puntos anunciados.
+10. Explica la conexión con Cristo y el evangelio desde el contexto y el conjunto de la Escritura. Puede integrarse al desarrollo. No alegorices detalles ni inventes tipologías.
+11. Concluye retomando proposición y necesidad inicial. Resume y llama a creer, arrepentirse, adorar, perseverar u obedecer según el texto. Distingue creyentes y no creyentes cuando corresponda. Cierra con oración ligada al pasaje.
+12. Revisa: correspondencia entre número y puntos, cobertura textual, referencias, unidad de propósito, transiciones, aplicaciones específicas y ausencia de datos inventados. Expresa las incertidumbres interpretativas con su grado de certeza.
+
+Orden de contenido: ficha, introducción y contexto, idea exegética, proposición, bosquejo, mapa de flujo, desarrollo, conexión con Cristo, conclusión y oración.
+Si la app exige encabezados de navegación, consérvalos y distribuye dentro de ellos estos elementos, sin eliminar la proposición ni duplicar el bosquejo.
+
+En seguimientos responde a la pregunta concreta con el mismo método. Respeta la versión solicitada y no inventes números Strong ni datos lingüísticos.
+`;
+
 export const MODEL_CANDIDATES = [
   'openrouter/free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemma-3-27b-it:free',
 ];
 
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -49,7 +78,7 @@ export function buildMessages(body: any) {
   const { passageOrTopic, translationPreference, messages, userPrompt } = body;
 
   const chatMessages: Array<{ role: string; content: string }> = [
-    { role: 'system', content: THEOLOGICAL_SYSTEM_PROMPT },
+    { role: 'system', content: body.studyStyle === 'continuous' ? CONTINUOUS_EXPOSITION_PROMPT : THEOLOGICAL_SYSTEM_PROMPT },
   ];
 
   if (Array.isArray(messages) && messages.length > 0) {
@@ -87,3 +116,38 @@ export function errorMsg(status: number, body: any): string {
 }
 
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+// One budget covers all free-model attempts, including response-body reads.
+export async function requestFreeStudy(body: any, budgetMs = 45000) {
+  const started = Date.now();
+  const messages = buildMessages(body);
+  const useGroq = Boolean(process.env.GROQ_API_KEY);
+  const apiKey = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('Proveedor gratuito no configurado.');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), budgetMs);
+  try {
+    const response = await fetch(useGroq ? 'https://api.groq.com/openai/v1/chat/completions' : OPENROUTER_API_URL, {
+      method: 'POST', signal: controller.signal,
+      headers: useGroq ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` } : getHeaders(),
+      body: JSON.stringify({
+        model: useGroq ? 'openai/gpt-oss-120b' : 'openrouter/free', messages, stream: false, temperature: 0.3,
+        ...(useGroq ? { max_completion_tokens: 4096, reasoning_effort: 'medium' } : { max_tokens: 4096 }),
+      }),
+    });
+    if (!response.ok) {
+      console.info('free-study-attempt', { provider: useGroq ? 'groq' : 'openrouter', status: response.status, elapsedMs: Date.now() - started });
+      throw new Error(response.status === 429 ? 'Cuota gratuita temporalmente alcanzada. Esperá y reintentá.' : `Proveedor gratuito no disponible (${response.status}).`);
+    }
+    const data = await response.json();
+    const choice = data.choices?.[0];
+    const text = choice?.message?.content;
+    if (choice?.finish_reason === 'length') throw new Error('El estudio superó el límite de salida y quedó incompleto.');
+    if (typeof text !== 'string' || !text.trim()) throw new Error('El proveedor devolvió una respuesta vacía.');
+    const warning = '> **Borrador a revisar: contrastá con la Biblia.** Puede contener errores de contexto, referencias o interpretación. No es un estudio verificado.\n\n';
+    return { text: warning + text, model: data.model || (useGroq ? 'openai/gpt-oss-120b' : 'openrouter/free'), durationMs: Date.now() - started, draft: true };
+  } catch (error: any) {
+    if (controller.signal.aborted) throw new Error('El proveedor gratuito no respondió dentro del tiempo disponible.');
+    throw error;
+  } finally { clearTimeout(timer); }
+}
