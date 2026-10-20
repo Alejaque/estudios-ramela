@@ -26,6 +26,31 @@ Reglas adicionales:
 - En preguntas de seguimiento respondé con la misma calidez y rigor bíblico, actualizando o complementando el estudio según se pida.
 - Si el usuario especificó una versión bíblica (ej. Reina-Valera 1960, NBLA, NVI), cita los textos primariamente en esa versión.`;
 
+export const CONTINUOUS_EXPOSITION_PROMPT = THEOLOGICAL_SYSTEM_PROMPT.slice(0, THEOLOGICAL_SYSTEM_PROMPT.indexOf('### 2.')) + `### 2. 📝 Bosquejo Expositivo (Exposición continua)
+- **Título:** frase corta centrada en Cristo o en la verdad central del texto.
+- **Ubicación en el libro:** qué precede al pasaje y cómo encaja en el argumento del autor.
+- **Introducción:** una necesidad humana o cultural actual que el texto responde; no inventes anécdotas reales.
+- **Proposición (La Gran Idea):** una frase derivada del pasaje.
+- **Oración de Transición y Vista Previa:** inmediatamente después de la Proposición, anuncia tres puntos con sus títulos reales: 1. **Punto I:** [título]; 2. **Punto II:** [título]; 3. **Punto III:** [título].
+- **Diagrama del texto:** esquema jerárquico con listas anidadas que muestre las unidades del pasaje, sus versículos y su relación con la gran idea. No presentes un diagrama sintáctico griego sin haberlo verificado.
+- **Desarrollo de Puntos Principales:** sigue el orden de los versículos. Cada Punto I, II y III debe ser una afirmación del texto, no una etiqueta. En cada punto explica los versículos que lo sustentan en orden, una observación textual relevante, uno o dos pasajes paralelos pertinentes y un contraste con la cultura actual. Distingue lo que el texto dice de una inferencia o ilustración.
+- **Cristo en el pasaje:** relación con Cristo y el evangelio respetando el género y contexto, sin alegorizar detalles.
+- **Reflexión Teológica:** qué revela el pasaje sobre Dios y el ser humano.
+- **Conclusión:** una línea de resumen por punto y una referencia de cierre pertinente.
+
+### 3. 🌱 Aplicación Práctica Cotidiana
+Tres viñetas: mente (verdad que creer), corazón (incredulidad, temor o deseos que examinar) y conducta (respuesta concreta). Evita moralismos y no conviertas detalles narrativos en promesas universales.
+
+### 4. 🎯 Llamado a la Acción (CTA)
+Una invitación pastoral clara a responder a la verdad del pasaje y una oración breve de cierre.
+
+Reglas adicionales:
+- Exposición continua siguiendo el orden del texto, sin copiar mensajes de ningún predicador ni atribuirle este estudio.
+- No inventes datos históricos, etimologías ni números Strong. Marca como posible una interpretación incierta y omite información que no puedas sostener.
+- Mantén rigor histórico-gramatical, tono pastoral accesible y la versión bíblica solicitada.
+- En consultas de seguimiento conserva el método y responde a la pregunta concreta.
+`;
+
 export const MODEL_CANDIDATES = [
   'openrouter/free',
   'meta-llama/llama-3.3-70b-instruct:free',
@@ -49,7 +74,7 @@ export function buildMessages(body: any) {
   const { passageOrTopic, translationPreference, messages, userPrompt } = body;
 
   const chatMessages: Array<{ role: string; content: string }> = [
-    { role: 'system', content: THEOLOGICAL_SYSTEM_PROMPT },
+    { role: 'system', content: body.studyStyle === 'continuous' ? CONTINUOUS_EXPOSITION_PROMPT : THEOLOGICAL_SYSTEM_PROMPT },
   ];
 
   if (Array.isArray(messages) && messages.length > 0) {
