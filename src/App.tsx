@@ -258,7 +258,7 @@ export default function App() {
     let streamCompleted = false;
 
     try {
-      const response = await fetch('/api/study/stream', {
+      const response = await fetch('/api/study-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -402,7 +402,7 @@ export default function App() {
         })),
       ];
 
-      const response = await fetch('/api/study/stream', {
+      const response = await fetch('/api/study-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -737,4 +737,4 @@ export default function App() {
       <OfflineIndicator />
     </div>
   );
-                     }
+}
