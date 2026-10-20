@@ -230,7 +230,7 @@ export function exportStudyToPdf({
     doc.setLineWidth(0.3);
     doc.line(margin, pageHeight - 11, pageWidth - margin, pageHeight - 11);
 
-    doc.text('Estudios Bíblicos Alejandro Ramela • Preparado para ministerio y púlpito', margin, pageHeight - 7);
+
     doc.text(`Página ${p} de ${totalPages}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
   }
 
@@ -242,4 +242,4 @@ export function exportStudyToPdf({
   const fileName = `Estudio_Alejandro_Ramela_${cleanPassage}.pdf`;
 
   doc.save(fileName);
-}
+      }
