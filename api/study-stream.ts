@@ -24,14 +24,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
   if (!process.env.OPENROUTER_API_KEY) return localFallback();
 
+  // Bound provider waits; leave time to send an honest error before Vercel stops the function.
+  const deadline = Date.now() + 50000;
   const chatMessages = buildMessages(req.body);
   for (const model of MODEL_CANDIDATES) {
     for (let attempt = 0; attempt < 2; attempt++) {
       let sentText = false;
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) {
+        send({ error: 'El servicio de IA está demorando demasiado. No se completó el estudio. Intentá nuevamente en unos minutos.' });
+        return res.end();
+      }
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       try {
         const response = await fetch(OPENROUTER_API_URL, {
-          method: 'POST', headers: getHeaders(),
+          method: 'POST', headers: getHeaders(), signal: AbortSignal.timeout(remainingMs),
           body: JSON.stringify({ model, messages: chatMessages, stream: true, temperature: 0.6, max_tokens: 4096 }),
         });
         if (!response.ok) {
@@ -71,6 +78,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         send({ done: true });
         return res.end();
       } catch {
+        if (Date.now() >= deadline && !sentText) {
+          send({ error: 'El servicio de IA está demorando demasiado. No se completó el estudio. Intentá nuevamente en unos minutos.' });
+          return res.end();
+        }
         if (sentText) {
           // Never append another model's answer to a partial study or pay for a silent restart.
           send({ error: 'La conexión se interrumpió antes de completar el estudio. El texto visible está incompleto; tocá Reintentar para generar el estudio completo.' });
