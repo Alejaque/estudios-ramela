@@ -19,6 +19,8 @@ import {
   ChevronRight,
   ArrowLeft,
   Timer,
+  Maximize2,
+  Minimize2,
   GripHorizontal,
   LocateFixed,
 } from 'lucide-react';
@@ -75,6 +77,10 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   const [targetMinutes, setTargetMinutes] = useState<number>(30); // 30 min default
   const [currentClock, setCurrentClock] = useState<string>('');
   const [timerScale, setTimerScale] = useState<number>(1);
+  // Modo franja: por defecto el cronómetro es una tira chica que no tapa el texto.
+  const [timerCompact, setTimerCompact] = useState<boolean>(() => {
+    try { return localStorage.getItem('pulpit_timer_compact') !== '0'; } catch { return true; }
+  });
   const [timerPosition, setTimerPosition] = useState<TimerPosition | null>(null);
   const [timerPreferencesLoaded, setTimerPreferencesLoaded] = useState(false);
   const [isTimerDragging, setIsTimerDragging] = useState(false);
@@ -175,11 +181,12 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     if (!isOpen || !timerPreferencesLoaded) return;
     try {
       localStorage.setItem('pulpit_timer_scale', String(timerScale));
+      localStorage.setItem('pulpit_timer_compact', timerCompact ? '1' : '0');
       localStorage.setItem('pulpit_timer_pos', JSON.stringify(timerPosition));
     } catch {
       // Storage lleno o deshabilitado: conservar las preferencias en memoria.
     }
-  }, [isOpen, timerPreferencesLoaded, timerScale, timerPosition]);
+  }, [isOpen, timerPreferencesLoaded, timerScale, timerPosition, timerCompact]);
 
   const handleTimerPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || timerDragRef.current) return;
@@ -805,7 +812,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         onPointerUp={handleTimerPointerEnd}
         onPointerCancel={handleTimerPointerEnd}
         onLostPointerCapture={handleTimerPointerEnd}
-        className={`absolute z-50 no-print font-sans rounded-3xl border shadow-2xl backdrop-blur-md touch-none select-none overflow-y-auto ${
+        className={`absolute z-50 no-print font-sans ${timerCompact ? 'rounded-full shadow-lg' : 'rounded-3xl shadow-2xl'} border backdrop-blur-md touch-none select-none overflow-y-auto ${
           isTimerDragging ? 'cursor-grabbing' : 'cursor-grab'
         } ${
           isTimeExceeded
@@ -815,10 +822,10 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             : 'bg-slate-950/90 border-white/20'
         }`}
         style={{
-          width: TIMER_BASE_WIDTH * timerScale,
+          ...(timerCompact ? {} : { width: TIMER_BASE_WIDTH * timerScale }),
           maxWidth: `calc(100vw - ${TIMER_MARGIN * 2}px)`,
           maxHeight: `calc(100dvh - ${TIMER_MARGIN * 2}px)`,
-          padding: `${12 * timerScale}px ${16 * timerScale}px`,
+          padding: timerCompact ? '4px 6px 4px 12px' : `${12 * timerScale}px ${16 * timerScale}px`,
           ...(timerPosition
             ? { left: timerPosition.x, top: timerPosition.y }
             : { right: TIMER_MARGIN, bottom: `max(${TIMER_MARGIN}px, env(safe-area-inset-bottom))` }),
@@ -826,6 +833,39 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         role="timer"
         aria-label={`Cronómetro de prédica: ${formatTimer(timerSeconds)} de ${targetMinutes} minutos`}
       >
+        {timerCompact ? (
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <Timer className={`w-3.5 h-3.5 shrink-0 ${isTimerRunning ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} aria-hidden="true" />
+            <span
+              className={`font-mono font-bold tabular-nums text-base leading-none ${
+                isTimeExceeded ? 'text-red-400 animate-pulse' : isTimeWarning ? 'text-amber-300' : 'text-emerald-400'
+              }`}
+            >
+              {formatTimer(timerSeconds)}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              title={isTimerRunning ? 'Pausar cronómetro' : 'Iniciar cronómetro de prédica'}
+              aria-label={isTimerRunning ? 'Pausar cronómetro' : 'Iniciar cronómetro de prédica'}
+              className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center cursor-pointer ${
+                isTimerRunning ? 'bg-amber-500 text-slate-950' : 'bg-emerald-600 text-white'
+              }`}
+            >
+              {isTimerRunning ? <Pause size={16} /> : <Play size={16} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimerCompact(false)}
+              title="Ver cronómetro completo (meta, tamaño, reiniciar)"
+              aria-label="Ver cronómetro completo"
+              className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center bg-white/10 text-slate-200 cursor-pointer"
+            >
+              <Maximize2 size={14} />
+            </button>
+          </div>
+        ) : (
+        <>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-300">
             <Timer className={`w-4 h-4 ${isTimerRunning ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
@@ -960,7 +1000,18 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             <LocateFixed className="w-3.5 h-3.5" aria-hidden="true" />
             Esquina
           </button>
+          <button
+            type="button"
+            onClick={() => setTimerCompact(true)}
+            title="Achicar a franja"
+            className="h-8 px-1.5 rounded-lg bg-white/10 hover:bg-white/20 flex items-center gap-1 cursor-pointer"
+          >
+            <Minimize2 className="w-3.5 h-3.5" aria-hidden="true" />
+            Franja
+          </button>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
