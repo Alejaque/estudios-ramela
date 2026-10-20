@@ -46,7 +46,7 @@ export function extractMainPoints(content: string): MainPoint[] {
 
   for (const rawLine of content.split('\n')) {
     // Quitamos marcadores de lista/encabezado y negritas para analizar la línea.
-    const line = rawLine
+    const line = rawLine.replace(/\*\*/g, '')
       .replace(/^\s*(?:#{1,4}\s*)?(?:[-*+]\s*)?(?:\d+[.)]\s*)?/, '')
       .replace(/\*\*/g, '')
       .trim();
