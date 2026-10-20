@@ -4,7 +4,7 @@ Cada vez que el usuario ingrese un pasaje bíblico o un tema (o una consulta de 
 
 ### 1. 📖 Contexto, Exégesis y Lenguas Originales
 - **Contexto Histórico-Literario:** Breve trasfondo del autor, destinatarios y situación original.
-- **Palabras Clave (Hebreo/Griego):** Identifica de 2 a 3 términos cruciales en su idioma original. Muestra la transliteración, la raíz (Strong) y cómo su estructura gramatical matiza el significado real del texto. Usa un formato visual ordenado (por ejemplo, viñetas detalladas con negritas).
+- **Observaciones del texto:** Explica palabras y relaciones en español. No produzcas griego/hebreo, Strong, etimologías ni morfología sin fuente verificada. No inventes contexto, frases de Jesús ni promesas de abundancia material.
 - **Pasajes Paralelos:** Referencias cruzadas clave que iluminan el mismo concepto en la Escritura.
 
 ### 2. 📝 Bosquejo Expositivo (Sencillo y Profundo)
@@ -26,7 +26,8 @@ Reglas adicionales:
 - En preguntas de seguimiento respondé con la misma calidez y rigor bíblico, actualizando o complementando el estudio según se pida.
 - Si el usuario especificó una versión bíblica (ej. Reina-Valera 1960, NBLA, NVI), cita los textos primariamente en esa versión.`;
 
-export const CONTINUOUS_EXPOSITION_PROMPT = THEOLOGICAL_SYSTEM_PROMPT.slice(0, THEOLOGICAL_SYSTEM_PROMPT.indexOf('### 2.')) + `
+export const CONTINUOUS_EXPOSITION_PROMPT = `Eres un asistente de estudio bíblico histórico-gramatical. El texto y su contexto gobiernan tus afirmaciones. No presentes conjeturas como hechos. No produzcas vocablos griegos/hebreos, números Strong, etimologías ni análisis morfológicos: no tienes una fuente léxica verificada. Usa observaciones del texto en español. No atribuyas al pasaje palabras de relatos paralelos. No inventes autor, fecha, audiencia o trasfondo específico; cuando sean discutidos o no estén sustentados, omítelos. No presentes multiplicación de dinero, talentos o recursos como promesa universal. Respeta la perspectiva evangélica del estudio y distingue interpretaciones debatidas de afirmaciones explícitas.
+
 Conserva exactamente los cuatro encabezados principales:
 ### 1. 📖 Contexto & Exégesis Profunda
 ### 2. 📝 Bosquejo Expositivo (Exposición continua)
@@ -120,37 +121,33 @@ export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 export async function requestFreeStudy(body: any, budgetMs = 45000) {
   const started = Date.now();
   const messages = buildMessages(body);
-  let lastError = 'No se pudo obtener una respuesta de los modelos gratuitos.';
-  if (!process.env.OPENROUTER_API_KEY) throw new Error('Proveedor gratuito no configurado.');
-  for (const model of MODEL_CANDIDATES) {
-    const remaining = budgetMs - (Date.now() - started);
-    if (remaining <= 0) break;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), remaining);
-    try {
-      const response = await fetch(OPENROUTER_API_URL, {
-        method: 'POST', headers: getHeaders(), signal: controller.signal,
-        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: 4096 }),
-      });
-      if (!response.ok) {
-        lastError = `Proveedor gratuito no disponible (${response.status}).`;
-        console.info('free-study-attempt', { model, status: response.status, elapsedMs: Date.now() - started });
-        if ([401, 402, 403].includes(response.status)) break;
-        continue;
-      }
-      const data = await response.json();
-      const choice = data.choices?.[0];
-      const text = choice?.message?.content;
-      if (choice?.finish_reason === 'length') throw new Error('El estudio superó el límite de salida y quedó incompleto.');
-      if (typeof text === 'string' && text.trim()) {
-        return { text, model: data.model || model, durationMs: Date.now() - started };
-      }
-      lastError = 'El proveedor devolvió una respuesta vacía.';
-    } catch (error: any) {
-      if (error?.message?.includes('incompleto')) throw error;
-      console.info('free-study-attempt', { model, status: controller.signal.aborted ? 'timeout' : 'network_error', elapsedMs: Date.now() - started });
-      lastError = controller.signal.aborted ? 'El proveedor gratuito no respondió dentro del tiempo disponible.' : 'No se pudo contactar al proveedor gratuito.';
-    } finally { clearTimeout(timer); }
-  }
-  throw new Error(lastError);
+  const useGroq = Boolean(process.env.GROQ_API_KEY);
+  const apiKey = process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('Proveedor gratuito no configurado.');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), budgetMs);
+  try {
+    const response = await fetch(useGroq ? 'https://api.groq.com/openai/v1/chat/completions' : OPENROUTER_API_URL, {
+      method: 'POST', signal: controller.signal,
+      headers: useGroq ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` } : getHeaders(),
+      body: JSON.stringify({
+        model: useGroq ? 'openai/gpt-oss-120b' : 'openrouter/free', messages, stream: false, temperature: 0.3,
+        ...(useGroq ? { max_completion_tokens: 4096, reasoning_effort: 'medium' } : { max_tokens: 4096 }),
+      }),
+    });
+    if (!response.ok) {
+      console.info('free-study-attempt', { provider: useGroq ? 'groq' : 'openrouter', status: response.status, elapsedMs: Date.now() - started });
+      throw new Error(response.status === 429 ? 'Cuota gratuita temporalmente alcanzada. Esperá y reintentá.' : `Proveedor gratuito no disponible (${response.status}).`);
+    }
+    const data = await response.json();
+    const choice = data.choices?.[0];
+    const text = choice?.message?.content;
+    if (choice?.finish_reason === 'length') throw new Error('El estudio superó el límite de salida y quedó incompleto.');
+    if (typeof text !== 'string' || !text.trim()) throw new Error('El proveedor devolvió una respuesta vacía.');
+    const warning = '> **Borrador a revisar: contrastá con la Biblia.** Puede contener errores de contexto, referencias o interpretación. No es un estudio verificado.\n\n';
+    return { text: warning + text, model: data.model || (useGroq ? 'openai/gpt-oss-120b' : 'openrouter/free'), durationMs: Date.now() - started, draft: true };
+  } catch (error: any) {
+    if (controller.signal.aborted) throw new Error('El proveedor gratuito no respondió dentro del tiempo disponible.');
+    throw error;
+  } finally { clearTimeout(timer); }
 }
