@@ -256,6 +256,7 @@ export default function App() {
     let accumulatedText = '';
     let streamFailed = false;
     let streamCompleted = false;
+    let streamReportedError = false;
 
     try {
       const response = await fetch('/api/study-stream', {
@@ -295,6 +296,7 @@ export default function App() {
                 if (data.done) streamCompleted = true;
                 if (data.error) {
                   streamFailed = true;
+                  streamReportedError = true;
                   setErrorMsg(data.error);
                   throw new Error(data.error);
                 }
@@ -311,6 +313,11 @@ export default function App() {
       streamFailed = true;
     }
 
+    if (streamReportedError && !accumulatedText.trim()) {
+      setIsLoading(false);
+      setIsStreaming(false);
+      return;
+    }
     if (accumulatedText.trim() && !streamCompleted) {
       setErrorMsg('La conexión se interrumpió antes de completar el estudio. El texto visible está incompleto; tocá Reintentar para generar el estudio completo.');
     }
@@ -737,4 +744,4 @@ export default function App() {
       <OfflineIndicator />
     </div>
   );
-}
+        }
