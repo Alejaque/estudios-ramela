@@ -58,6 +58,7 @@
 .markdown-theology {
   line-height: 1.8;
   color: #334155;
+  font-weight: 500;
 }
 
 .markdown-theology h1 {
@@ -108,7 +109,7 @@
 
 .markdown-theology p {
   margin-bottom: 0.95rem;
-  font-size: 1rem;
+  font-size: 1em;
 }
 
 .markdown-theology ul {
@@ -130,7 +131,7 @@
 
 .markdown-theology strong {
   color: #0f172a;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .markdown-theology blockquote {
@@ -169,7 +170,7 @@
 
 .dark .markdown-theology h3 {
   color: #93c5fd;
-  background: #1e293b/80;
+  background: #1e293b;
   border-left-color: #3b82f6;
 }
 
@@ -183,7 +184,7 @@
 
 .dark .markdown-theology blockquote {
   border-left-color: #818cf8;
-  background-color: #0f172a/90;
+  background-color: #0f172a;
   color: #94a3b8;
 }
 
@@ -210,3 +211,78 @@
     color: black !important;
   }
 }
+
+/* Pulpit theme is independent from the app theme. Keep explicit, valid colors. */
+.pulpit-view[data-pulpit-theme="dark-oled"],
+.pulpit-view[data-pulpit-theme="midnight"] {
+  --pulpit-text: #e2e8f0;
+  --pulpit-heading: #f8fafc;
+  --pulpit-accent: #93c5fd;
+  --pulpit-box: #1e293b;
+  --pulpit-border: #60a5fa;
+}
+.pulpit-view[data-pulpit-theme="light"] {
+  --pulpit-text: #334155;
+  --pulpit-heading: #0f172a;
+  --pulpit-accent: #1e40af;
+  --pulpit-box: #f1f5f9;
+  --pulpit-border: #2563eb;
+}
+.pulpit-view[data-pulpit-theme="sepia"] {
+  --pulpit-text: #443321;
+  --pulpit-heading: #38240e;
+  --pulpit-accent: #713f12;
+  --pulpit-box: #fef3c7;
+  --pulpit-border: #92400e;
+}
+.pulpit-view .pulpit-markdown,
+.pulpit-view .pulpit-markdown p,
+.pulpit-view .pulpit-markdown li {
+  color: var(--pulpit-text);
+}
+.pulpit-view .pulpit-markdown :is(h1, h2, h4, h5, h6, strong) {
+  color: var(--pulpit-heading);
+  border-color: var(--pulpit-border);
+}
+.pulpit-view .pulpit-markdown h3,
+.pulpit-view .pulpit-markdown blockquote,
+.pulpit-view .pulpit-markdown code {
+  color: var(--pulpit-accent);
+  background: var(--pulpit-box);
+  border-color: var(--pulpit-border);
+}
+.pulpit-view .pulpit-markdown :is(a, strong[title]) {
+  color: var(--pulpit-accent);
+}
+.pulpit-view[data-pulpit-theme="light"] > .pulpit-jumps,
+.pulpit-view[data-pulpit-theme="sepia"] > .pulpit-jumps {
+  color: #f1f5f9;
+  background: #1e293b;
+}
+
+.pulpit-view[data-pulpit-theme="light"] .pulpit-markdown strong[title] span,
+.pulpit-view[data-pulpit-theme="sepia"] .pulpit-markdown strong[title] span {
+  color: inherit;
+}
+
+.pulpit-view[data-pulpit-theme="light"] > .no-print:not(.pulpit-jumps),
+.pulpit-view[data-pulpit-theme="sepia"] > .no-print:not(.pulpit-jumps) {
+  color: #f8fafc;
+  background: #0f172a;
+  border-color: #334155;
+}
+
+/* Reading size controls every paragraph, list and heading in the pulpit. */
+.pulpit-view .pulpit-markdown {
+  font-weight: 500;
+}
+.pulpit-view .pulpit-markdown p {
+  font-size: 1em;
+}
+.pulpit-view .pulpit-markdown :is(h1, h2, h3, h4, strong) {
+  font-weight: 700;
+}
+.pulpit-view .pulpit-markdown h1 { font-size: 1.55em; }
+.pulpit-view .pulpit-markdown h2 { font-size: 1.35em; }
+.pulpit-view .pulpit-markdown h3 { font-size: 1.15em; }
+.pulpit-view .pulpit-markdown h4 { font-size: 1.05em; }
