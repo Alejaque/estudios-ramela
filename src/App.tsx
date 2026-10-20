@@ -255,6 +255,7 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    let streamCompleted = false;
 
     try {
       const response = await fetch('/api/study/stream', {
@@ -291,8 +292,10 @@ export default function App() {
                   accumulatedText += data.text;
                   setContent(accumulatedText);
                 }
+                if (data.done) streamCompleted = true;
                 if (data.error) {
                   streamFailed = true;
+                  setErrorMsg(data.error);
                   throw new Error(data.error);
                 }
               } catch (parseErr: any) {
@@ -308,8 +311,12 @@ export default function App() {
       streamFailed = true;
     }
 
-    // Direct JSON fallback endpoint
-    if (streamFailed || !accumulatedText.trim()) {
+    if (accumulatedText.trim() && !streamCompleted) {
+      setErrorMsg('La conexión se interrumpió antes de completar el estudio. El texto visible está incompleto; tocá Reintentar para generar el estudio completo.');
+    }
+
+    // Retry only before receiving text. Never silently replace a partial study.
+    if (!accumulatedText.trim()) {
       try {
         const fallbackRes = await fetch('/api/study', {
           method: 'POST',
@@ -381,6 +388,7 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    let streamCompleted = false;
 
     try {
       const history = [
@@ -426,6 +434,8 @@ export default function App() {
               const jsonStr = trimmed.slice(6);
               try {
                 const data = JSON.parse(jsonStr);
+                if (data.done) streamCompleted = true;
+                if (data.error) setErrorMsg(data.error);
                 if (data.text) {
                   accumulatedText += data.text;
                   setChatMessages((prev) =>
@@ -445,7 +455,10 @@ export default function App() {
       streamFailed = true;
     }
 
-    if (streamFailed || !accumulatedText.trim()) {
+    if (accumulatedText.trim() && !streamCompleted) {
+      setErrorMsg('La respuesta se interrumpió antes de completarse. Podés volver a hacer la consulta.');
+    }
+    if (!accumulatedText.trim()) {
       // Local intelligent response generator
       accumulatedText = generateFollowUpResponse(userText, passageOrTopic);
       setChatMessages((prev) =>
@@ -724,4 +737,4 @@ export default function App() {
       <OfflineIndicator />
     </div>
   );
-}
+                     }
