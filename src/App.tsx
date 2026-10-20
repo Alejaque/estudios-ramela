@@ -54,6 +54,8 @@ export default function App() {
   const [passageOrTopic, setPassageOrTopic] = useState(INITIAL_FEATURED_STUDY.passageOrTopic);
   const [translation, setTranslation] = useState(INITIAL_FEATURED_STUDY.translation);
   const [content, setContent] = useState(INITIAL_FEATURED_STUDY.content);
+  const [studyStyle, setStudyStyle] = useState('continuous');
+  const [activeStudyStyle, setActiveStudyStyle] = useState('classic');
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -239,6 +241,7 @@ export default function App() {
       setIsSpeaking(false);
     }
 
+    setActiveStudyStyle(studyStyle);
     setPassageOrTopic(targetPassage);
     setTranslation(chosenTranslation);
     saveToRecentHistory(targetPassage, chosenTranslation);
@@ -263,6 +266,7 @@ export default function App() {
         body: JSON.stringify({
           passageOrTopic: targetPassage,
           translationPreference: chosenTranslation,
+            studyStyle,
         }),
       });
 
@@ -317,6 +321,7 @@ export default function App() {
           body: JSON.stringify({
             passageOrTopic: targetPassage,
             translationPreference: chosenTranslation,
+            studyStyle,
           }),
         });
 
@@ -400,6 +405,7 @@ export default function App() {
         body: JSON.stringify({
           passageOrTopic,
           translationPreference: translation,
+          studyStyle: activeStudyStyle,
           messages: history,
           userPrompt: userText,
         }),
@@ -494,6 +500,7 @@ export default function App() {
         passageOrTopic,
         content,
         translation,
+        studyStyle: activeStudyStyle,
         createdAt: new Date().toISOString(),
       };
       setSavedStudies((prev) => [newSaved, ...prev]);
@@ -504,6 +511,7 @@ export default function App() {
   const handleSelectSavedStudy = (study: SavedStudy) => {
     setPassageOrTopic(study.passageOrTopic);
     if (study.translation) setTranslation(study.translation);
+    setActiveStudyStyle(study.studyStyle || 'classic');
     setContent(study.content);
     setChatMessages([]);
     setIsSavedModalOpen(false);
@@ -554,6 +562,8 @@ export default function App() {
         {/* Input Bar with Canonical Explorer, Autocomplete and Recent History */}
         <StudyInput
           onStudy={handleGenerateStudy}
+          studyStyle={studyStyle}
+          onStyleChange={setStudyStyle}
           isLoading={isLoading}
           activePassage={passageOrTopic}
           recentSearches={recentHistory}
