@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Loader2, Copy, Check, Sparkles } from 'lucide-react';
+import { X, BookOpen, Loader2, Copy, Check, Sparkles, ExternalLink } from 'lucide-react';
+import { rvr1960Url } from '../utils/bibleRef';
 import { SCRIPTURE_TEXTS } from '../utils/theologicalEngine';
 import { useModalBackButton } from '../hooks/useModalBackButton';
 
@@ -7,8 +8,6 @@ interface BibleVerseModalProps {
   reference: string;
   onClose: () => void;
 }
-
-const API_KEY = '0him5wcYiZAVcO274bN-n';
 
 const TRANSLATIONS = [
   { id: 'rvr60', apiId: '592420522e16049f-01', label: 'RVR 1960', fullName: 'Reina-Valera 1960' },
@@ -21,6 +20,8 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
+  // true cuando el texto vino de la API (api.bible), que NO tiene RVR1960 ni NVI.
+  const [fromApi, setFromApi] = useState(false);
 
   // Este modal solo se monta cuando está abierto: "Atrás" lo cierra y
   // vuelve al estudio (o al púlpito) en vez de salir de la app.
@@ -41,6 +42,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
     }
 
     if (localMatch) {
+      setFromApi(false);
       setVerseText(selectedVersion === 'rvr60' ? localMatch.rvr60 : localMatch.nvi);
       setLoading(false);
       setError('');
@@ -53,19 +55,14 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
       setError('');
       setVerseText('');
       try {
-        const transObj = TRANSLATIONS.find((t) => t.id === selectedVersion)!;
-        const encoded = encodeURIComponent(reference);
         const res = await fetch(
-          `https://api.scripture.api.bible/v1/bibles/${transObj.apiId}/search?query=${encoded}&limit=5`,
-          {
-            headers: { 'api-key': API_KEY },
-          }
+          `/api/bible?ref=${encodeURIComponent(reference)}&version=${selectedVersion}`
         );
         if (!res.ok) throw new Error('No encontrado');
         const data = await res.json();
-        const passages = data.data?.passages || [];
-        if (!passages.length) throw new Error('Sin resultados');
-        setVerseText(passages[0].content.replace(/<[^>]+>/g, '').trim());
+        if (!data.text) throw new Error('Sin resultados');
+        setFromApi(true);
+        setVerseText(data.text);
       } catch {
         // Fallback elegante contextual
         setVerseText(
@@ -177,15 +174,36 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
                 "{verseText}"
               </p>
               <p className="text-right text-xs font-semibold text-blue-700 dark:text-blue-400">
-                — {reference} ({TRANSLATIONS.find((t) => t.id === selectedVersion)?.fullName})
+                — {reference} (
+                {fromApi
+                  ? selectedVersion === 'rvr60' ? 'Reina-Valera 1909' : 'Biblia en español sencillo'
+                  : TRANSLATIONS.find((t) => t.id === selectedVersion)?.fullName}
+                )
               </p>
+              {fromApi && selectedVersion === 'rvr60' && (
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  Este texto es de la RVR 1909. Para la Reina-Valera 1960 abrí el enlace de abajo.
+                </p>
+              )}
             </div>
           )}
         </div>
 
         {/* Pie con atajo */}
         <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
-          <span>Toca fuera o presiona ESC para cerrar</span>
+          {rvr1960Url(reference) ? (
+            <a
+              href={rvr1960Url(reference)!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Ver en RVR 1960
+            </a>
+          ) : (
+            <span>Toca fuera o presiona ESC para cerrar</span>
+          )}
           <button
             onClick={handleCopy}
             className="text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
