@@ -263,3 +263,10 @@
 .pulpit-view[data-pulpit-theme="sepia"] .pulpit-markdown strong[title] span {
   color: inherit;
 }
+
+.pulpit-view[data-pulpit-theme="light"] > .no-print:not(.pulpit-jumps),
+.pulpit-view[data-pulpit-theme="sepia"] > .no-print:not(.pulpit-jumps) {
+  color: #f8fafc;
+  background: #0f172a;
+  border-color: #334155;
+}
