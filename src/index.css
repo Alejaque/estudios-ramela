@@ -210,3 +210,56 @@
     color: black !important;
   }
 }
+
+/* Pulpit theme is independent from the app theme. Keep explicit, valid colors. */
+.pulpit-view[data-pulpit-theme="dark-oled"],
+.pulpit-view[data-pulpit-theme="midnight"] {
+  --pulpit-text: #e2e8f0;
+  --pulpit-heading: #f8fafc;
+  --pulpit-accent: #93c5fd;
+  --pulpit-box: #1e293b;
+  --pulpit-border: #60a5fa;
+}
+.pulpit-view[data-pulpit-theme="light"] {
+  --pulpit-text: #334155;
+  --pulpit-heading: #0f172a;
+  --pulpit-accent: #1e40af;
+  --pulpit-box: #f1f5f9;
+  --pulpit-border: #2563eb;
+}
+.pulpit-view[data-pulpit-theme="sepia"] {
+  --pulpit-text: #443321;
+  --pulpit-heading: #38240e;
+  --pulpit-accent: #713f12;
+  --pulpit-box: #fef3c7;
+  --pulpit-border: #92400e;
+}
+.pulpit-view .pulpit-markdown,
+.pulpit-view .pulpit-markdown p,
+.pulpit-view .pulpit-markdown li {
+  color: var(--pulpit-text);
+}
+.pulpit-view .pulpit-markdown :is(h1, h2, h4, h5, h6, strong) {
+  color: var(--pulpit-heading);
+  border-color: var(--pulpit-border);
+}
+.pulpit-view .pulpit-markdown h3,
+.pulpit-view .pulpit-markdown blockquote,
+.pulpit-view .pulpit-markdown code {
+  color: var(--pulpit-accent);
+  background: var(--pulpit-box);
+  border-color: var(--pulpit-border);
+}
+.pulpit-view .pulpit-markdown :is(a, strong[title]) {
+  color: var(--pulpit-accent);
+}
+.pulpit-view[data-pulpit-theme="light"] > .pulpit-jumps,
+.pulpit-view[data-pulpit-theme="sepia"] > .pulpit-jumps {
+  color: #f1f5f9;
+  background: #1e293b;
+}
+
+.pulpit-view[data-pulpit-theme="light"] .pulpit-markdown strong[title] span,
+.pulpit-view[data-pulpit-theme="sepia"] .pulpit-markdown strong[title] span {
+  color: inherit;
+}
