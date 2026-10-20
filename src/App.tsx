@@ -29,6 +29,7 @@ export default function App() {
  const [imported,setImported]=useState<SavedStudy[]>(()=>{try{return JSON.parse(localStorage.getItem('reviewed_library_imports')||'[]')}catch{return []}});
  const previous: SavedStudy[]=(()=>{try{return JSON.parse(localStorage.getItem('biblical_studies_saved')||'[]')}catch{return []}})();
  const isDraft=mode==='drafts';
+ const currentIsDraft=drafts.some(d=>d.id===study.id);
  const library=isDraft?drafts:[JUAN,...imported.filter(s=>s.id!==JUAN.id)];
  const visible=library.filter(s=>(s.title+' '+s.passageOrTopic).toLowerCase().includes(query.toLowerCase()));
  function jump(label:string){const el=Array.from(document.querySelectorAll('#reading h2')).find(e=>e.textContent?.startsWith(label));el?.scrollIntoView({behavior:'smooth',block:'start'});}
@@ -46,16 +47,16 @@ export default function App() {
  <main className="max-w-7xl mx-auto p-4 sm:p-8 grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
  <aside className="lg:sticky lg:top-28"><div className="flex items-center justify-between mb-4"><h2 className="font-serif text-2xl flex gap-2 items-center"><Library size={22}/> {isDraft?'Borradores':'Tus estudios'}</h2><PWAInstallButton variant="header"/></div>
  {isDraft&&<form onSubmit={generate} className="mb-5 space-y-3"><label className="block font-semibold" htmlFor="draft-passage">Nuevo borrador con IA</label><input id="draft-passage" value={draftPassage} onChange={e=>setDraftPassage(e.target.value)} placeholder="Pasaje o tema" className="library-control w-full bg-transparent" required/><button disabled={busy} className="library-control w-full">{busy?'Preparando borrador…':'Crear borrador'}</button>{draftError&&<p role="alert" className="text-sm">{draftError}</p>}</form>}
- <label className="flex gap-2 items-center rounded-xl border border-[#cbd4c9] dark:border-[#405245] p-3 mb-4"><Search size={18}/><input className="bg-transparent min-w-0 w-full outline-none text-base" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar en la biblioteca"/></label>
+ <label className="flex gap-2 items-center rounded-xl border border-[#cbd4c9] dark:border-[#405245] p-3 mb-4"><Search size={18}/><input className="bg-transparent min-w-0 w-full outline-none text-base" value={query} onChange={e=>setQuery(e.target.value)} placeholder={isDraft?'Buscar borradores':'Buscar en la biblioteca'}/></label>
  <div className="space-y-3">{visible.map(s=><button key={s.id} onClick={()=>load(s)} className={'text-left w-full rounded-2xl p-4 border '+(study.id===s.id?'border-[#315b46] bg-[#e3ebe0] dark:bg-[#263b2d]':'border-[#cbd4c9]')}><span className="text-xs font-bold tracking-wide">{s.passageOrTopic}</span><span className="block font-serif text-xl mt-2 leading-tight">{s.title}</span><span className="block text-sm mt-3 opacity-70">Abrir estudio <ChevronRight className="inline" size={14}/></span></button>)}</div>
- {!visible.length&&<p className="py-4">No hay estudios con esa búsqueda.</p>}
+ {!visible.length&&<p className="py-4">{isDraft?'Todavía no hay borradores con esa búsqueda.':'No hay estudios con esa búsqueda.'}</p>}
  {!isDraft&&<details className="mt-5 text-sm"><summary className="cursor-pointer py-3">Agregar un estudio</summary><p className="mb-3 opacity-75">Importá el archivo JSON del estudio preparado para tu biblioteca.</p><input aria-label="Importar estudio JSON" type="file" accept="application/json,.json" onChange={e=>{if(e.target.files?.[0])importStudies(e.target.files[0]);}}/>{importError&&<p className="mt-2">{importError}</p>}</details>}
  {previous.length>0&&<button className="mt-4 underline text-sm py-3" onClick={()=>setArchive(true)}>Guardados anteriores ({previous.length})</button>}
  </aside>
  {(!isDraft||drafts.length>0)?<section className="min-w-0">{isDraft&&<div className="mb-4 flex gap-3 items-center"><span className="text-xs tracking-wide border rounded px-2 py-1">Borrador</span>{drafts.some(s=>s.id===study.id)&&<button className="library-control text-sm" onClick={promote}>Mover a biblioteca</button>}</div>}<div className="mb-6"><p className="text-sm tracking-wide uppercase opacity-65 mb-2">{study.passageOrTopic} · {study.translation || 'Versión no indicada'}</p><h2 className="font-serif text-3xl sm:text-4xl leading-tight max-w-3xl">{study.title}</h2><div className="flex flex-wrap gap-2 mt-5">
  <button onClick={()=>setBible(true)} className="library-control"><BookOpen size={18}/> Leer pasaje</button>
  <button onClick={()=>resize(-2)} className="library-control" aria-label="Reducir letra">A−</button><span className="self-center text-sm px-1">{size}px</span><button onClick={()=>resize(2)} className="library-control" aria-label="Aumentar letra">A+</button>
- <button onClick={()=>exportStudyToPdf({passageOrTopic:study.passageOrTopic,translation:study.translation,content:study.content})} className="library-control"><FileDown size={18}/> PDF</button>
+ <button onClick={()=>exportStudyToPdf({passageOrTopic:study.passageOrTopic,translation:study.translation,content:(currentIsDraft?'# Borrador\n\n':'')+study.content})} className="library-control"><FileDown size={18}/> PDF</button>
  <button onClick={()=>setNotes(!notes)} className="library-control"><PenLine size={18}/> Notas</button></div></div>
  <details className="mb-5 border-y border-[#cbd4c9] dark:border-[#405245] py-3"><summary className="font-semibold cursor-pointer">Recorrido del estudio</summary><div className="flex flex-wrap gap-2 mt-3">{SECTIONS.map(s=><button key={s} onClick={()=>jump(s)} className="library-control text-sm">{s}</button>)}</div></details>
  <article id="reading" className="library-reading bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl px-5 sm:px-9 py-7 sm:py-10 shadow-sm" style={{fontSize:size,lineHeight:1.75}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{study.content}</ReactMarkdown></article>
@@ -63,6 +64,6 @@ export default function App() {
  </section>:<section className="py-10 font-serif text-2xl">Tus borradores aparecerán acá.</section>}</main>
  {bible&&<BibleVerseModal reference={study.passageOrTopic} onClose={()=>setBible(false)}/>}
  {archive&&<div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl p-6 w-full max-w-xl max-h-[85dvh] overflow-auto"><div className="flex justify-between items-center mb-4"><h2 className="font-serif text-2xl">Guardados anteriores</h2><button aria-label="Cerrar guardados" onClick={()=>setArchive(false)} className="p-3"><X/></button></div>{previous.map(s=><button key={s.id} onClick={()=>load(s)} className="block w-full text-left p-4 border-b"><strong>{s.passageOrTopic}</strong><span className="block">{s.title}</span></button>)}</div></div>}
- <PulpitModal isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={study.content}/>
+ <PulpitModal isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={(currentIsDraft?'# Borrador\n\n':'')+study.content}/>
  </div></div>;
 }
