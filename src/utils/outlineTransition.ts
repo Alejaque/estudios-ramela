@@ -51,7 +51,7 @@ export function extractMainPoints(content: string): MainPoint[] {
       .replace(/\*\*/g, '')
       .trim();
 
-    const match = line.match(/^(?:Punto\s+)?(VIII|VII|VI|IV|IX|III|II|X|V|I)\s*[.):\-–—]\s*(.+)$/i);
+    const match = line.match(/^(?:Punto\s+)?(VIII|VII|VI|IV|IX|III|II|X|V|I)\s*[.):\-–—‑−]\s*(.+)$/i);
     if (!match) continue;
 
     const numeralRaw = match[1].toUpperCase();
