@@ -258,9 +258,12 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 50000);
 
     try {
-      const response = await fetch('/api/study/stream', {
+      const response = await fetch('/api/study-stream', {
+        signal: controller.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -312,29 +315,12 @@ export default function App() {
       streamFailed = true;
     }
 
-    // Direct JSON fallback endpoint
+    window.clearTimeout(timer);
     if (streamFailed || !accumulatedText.trim()) {
-      try {
-        const fallbackRes = await fetch('/api/study', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            passageOrTopic: targetPassage,
-            translationPreference: chosenTranslation,
-            studyStyle,
-          }),
-        });
-
-        if (fallbackRes.ok) {
-          const data = await fallbackRes.json();
-          if (data.text) {
-            accumulatedText = data.text;
-            setContent(accumulatedText);
-          }
-        }
-      } catch {
-        // Backend offline or unreachable
-      }
+      setErrorMsg('El proveedor gratuito no pudo completar el estudio en el tiempo disponible. Reintentá más tarde. No se sustituyó por un bosquejo local.');
+      setIsLoading(false);
+      setIsStreaming(false);
+      return;
     }
 
     // Ultimate fallback: Our rich, scholarly Theological Engine
@@ -386,6 +372,8 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 50000);
 
     try {
       const history = [
@@ -399,7 +387,8 @@ export default function App() {
         })),
       ];
 
-      const response = await fetch('/api/study/stream', {
+      const response = await fetch('/api/study-stream', {
+        signal: controller.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -451,6 +440,7 @@ export default function App() {
       streamFailed = true;
     }
 
+    window.clearTimeout(timer);
     if (streamFailed || !accumulatedText.trim()) {
       // Local intelligent response generator
       accumulatedText = generateFollowUpResponse(userText, passageOrTopic);
