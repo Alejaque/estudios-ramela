@@ -18,7 +18,7 @@ export function parseBiblicalStudySections(fullText: string): ParsedSections {
   if (!fullText) return result;
 
   // Regex patterns to find section headers
-  const s1Regex = /###?\s*(?:1[.)]\s*)?[📖\s]*Contexto[,\s]+Ex[ée]gesis/i;
+  const s1Regex = /###?\s*(?:1[.)]\s*)?[📖\s]*Contexto[,\s&y]+Ex[ée]gesis/i;
   const s2Regex = /###?\s*(?:2[.)]\s*)?[📝\s]*Bosquejo\s+Expositivo/i;
   const s3Regex = /###?\s*(?:3[.)]\s*)?[🌱\s]*Aplicaci[óo]n\s+Pr[áa]ctica/i;
   const s4Regex = /###?\s*(?:4[.)]\s*)?[🎯\s]*Llamado\s+a\s+la\s+Acci[óo]n/i;
