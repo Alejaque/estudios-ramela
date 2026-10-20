@@ -678,70 +678,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           <Compass className="w-3.5 h-3.5 text-amber-400" />
           Salto rápido:
         </span>
-        <button
-          type="button"
-          onClick={() => scrollToHeading('Contexto')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          1. Contexto
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToHeading('Introducción')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          2. Introducción
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToHeading('Proposición')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          3. Gran Idea
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToHeading('Oración de Transición')}
-          title="Oración de Transición y Vista Previa (Punto I, II y III)"
-          className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
-        >
-          ↪ Vista Previa
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToMainPoint('I')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          4. Punto I
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToMainPoint('II')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          5. Punto II
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToMainPoint('III')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          6. Punto III
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToHeading('Aplicación')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          7. Aplicación
-        </button>
-        <button
-          type="button"
-          onClick={() => scrollToHeading('Llamado')}
-          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer"
-        >
-          8. Llamado
-        </button>
+        {[
+          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
+        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
         {personalNote && (
           <button
             type="button"
