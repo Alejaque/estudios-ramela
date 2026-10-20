@@ -18,6 +18,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { SectionCard } from './SectionCard';
+import { BibleVerseModal } from './BibleVerseModal';
 import { parseBiblicalStudySections } from '../utils/sectionParser';
 import { ensureOutlineTransition } from '../utils/outlineTransition';
 import { exportStudyToPdf } from '../utils/pdfExport';
@@ -47,6 +48,7 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
   const [fontSize, setFontSize] = useState<number>(16);
   const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif');
   const [sharedToast, setSharedToast] = useState(false);
+  const [verseRef, setVerseRef] = useState<string | null>(null);
 
   // Garantiza la "Oración de Transición y Vista Previa" (Punto I, II y III)
   // inmediatamente después de la Proposición, también en bosquejos generados
@@ -116,6 +118,12 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
 
   return (
     <div className="space-y-5">
+      {verseRef && (
+        <BibleVerseModal
+          reference={verseRef}
+          onClose={() => setVerseRef(null)}
+        />
+      )}
       {/* Top Banner & Control Bar */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-4 sm:p-6 transition-all">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -135,7 +143,17 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-theology-serif tracking-tight">
-              {passageOrTopic}
+              <button
+                type="button"
+                onClick={() => setVerseRef(passageOrTopic.trim())}
+                aria-label={`Leer pasaje bíblico: ${passageOrTopic}`}
+                aria-haspopup="dialog"
+                title="Tocar para leer el texto bíblico"
+                className="inline-flex items-center gap-2 text-left rounded-lg cursor-pointer hover:text-blue-700 dark:hover:text-blue-300 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
+              >
+                <span>{passageOrTopic}</span>
+                <BookOpen className="w-5 h-5 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+              </button>
             </h2>
           </div>
 
