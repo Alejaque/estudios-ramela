@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, BookOpen, Loader2, Copy, Check, Sparkles, ExternalLink } from 'lucide-react';
 import { rvr1960Url } from '../utils/bibleRef';
 import { SCRIPTURE_TEXTS } from '../utils/theologicalEngine';
@@ -26,6 +27,42 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
   // Este modal solo se monta cuando está abierto: "Atrás" lo cierra y
   // vuelve al estudio (o al púlpito) en vez de salir de la app.
   useModalBackButton(true, onClose);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialogRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, []);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    }
+    if (event.key === 'Tab') {
+      const controls = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), a[href], [tabindex="0"]'
+      );
+      if (!controls?.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  };
 
   // Normalizar referencia para búsqueda local
   const cleanRef = reference.trim().toLowerCase();
@@ -83,11 +120,22 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden transition-all">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bible-verse-title"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
+        className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg max-h-[calc(100dvh-2rem)] flex flex-col min-h-0 border border-slate-200 dark:border-slate-800 overflow-hidden outline-none"
+      >
         {/* Encabezado */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-transparent dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900">
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-transparent dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <BookOpen className="w-5 h-5" />
@@ -101,7 +149,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
                   Lectura directa
                 </span>
               </div>
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 font-theology-serif text-lg leading-tight">
+              <h3 id="bible-verse-title" className="font-bold text-slate-900 dark:text-slate-100 font-theology-serif text-lg leading-tight">
                 {reference}
               </h3>
             </div>
@@ -123,6 +171,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
             <button
               onClick={onClose}
               title="Cerrar ventana"
+              aria-label="Cerrar ventana"
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -131,7 +180,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
         </div>
 
         {/* Selector de versión */}
-        <div className="flex items-center justify-between px-6 py-2.5 bg-slate-50/70 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-xs">
+        <div className="shrink-0 flex flex-wrap gap-2 items-center justify-between px-4 sm:px-6 py-2.5 bg-slate-50/70 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-xs">
           <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             Versión bíblica:
@@ -154,7 +203,10 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
         </div>
 
         {/* Contenido del versículo */}
-        <div className="px-6 py-6 min-h-[140px] flex items-center justify-center">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-6"
+          tabIndex={0}
+          role="region"
+          aria-label="Texto del pasaje bíblico">
           {loading && (
             <div className="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400 py-6">
               <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
@@ -190,7 +242,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
         </div>
 
         {/* Pie con atajo */}
-        <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+        <div className="shrink-0 flex-wrap gap-2 px-4 sm:px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
           {rvr1960Url(reference) ? (
             <a
               href={rvr1960Url(reference)!}
@@ -212,7 +264,7 @@ export const BibleVerseModal: React.FC<BibleVerseModalProps> = ({ reference, onC
           </button>
         </div>
       </div>
-      <div className="absolute inset-0 -z-10" onClick={onClose} />
-    </div>
+    </div>,
+    document.body
   );
 };
