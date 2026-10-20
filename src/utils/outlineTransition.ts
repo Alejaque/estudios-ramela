@@ -13,14 +13,14 @@
 
 export interface MainPoint {
   /** Numeral romano normalizado: "I" | "II" | "III" */
-  numeral: 'I' | 'II' | 'III';
+  numeral: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | 'VII' | 'VIII' | 'IX' | 'X';
   /** Etiqueta visible: "Punto I", "Punto II", "Punto III" */
   label: string;
   /** Título del punto, sin el numeral ni negritas. */
   title: string;
 }
 
-const ROMAN_ORDER: Array<'I' | 'II' | 'III'> = ['I', 'II', 'III'];
+const ROMAN_ORDER: Array<'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | 'VII' | 'VIII' | 'IX' | 'X'> = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
 function cleanTitle(raw: string): string {
   return raw
@@ -51,12 +51,11 @@ export function extractMainPoints(content: string): MainPoint[] {
       .replace(/\*\*/g, '')
       .trim();
 
-    const match = line.match(/^(?:Punto\s+)?(I{1,3}|IV)\s*[.):\-–—]\s*(.+)$/i);
+    const match = line.match(/^(?:Punto\s+)?(VIII|VII|VI|IV|IX|III|II|X|V|I)\s*[.):\-–—]\s*(.+)$/i);
     if (!match) continue;
 
     const numeralRaw = match[1].toUpperCase();
-    if (numeralRaw === 'IV') continue; // Solo nos interesan I, II y III.
-    const numeral = numeralRaw as 'I' | 'II' | 'III';
+    const numeral = numeralRaw as 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | 'VII' | 'VIII' | 'IX' | 'X';
 
     const title = cleanTitle(match[2]);
     // Descartamos falsos positivos muy cortos o que son sub-puntos (A., B., ...).
@@ -72,13 +71,10 @@ export function extractMainPoints(content: string): MainPoint[] {
 
 /** Construye el bloque Markdown de la Oración de Transición y Vista Previa. */
 export function buildTransitionPreview(points: MainPoint[]): string {
-  const [p1, p2, p3] = points;
   return [
     '- **Oración de Transición y Vista Previa:**',
-    `  *De esta gran idea se desprende el recorrido que haremos juntos por el texto: en primer lugar, **Punto I: ${p1.title}**; en segundo lugar, **Punto II: ${p2.title}**; y en tercer lugar, **Punto III: ${p3.title}**. Abramos, pues, la Palabra y dejemos que ella misma nos guíe punto por punto.*`,
-    `  1. **Punto I:** ${p1.title}`,
-    `  2. **Punto II:** ${p2.title}`,
-    `  3. **Punto III:** ${p3.title}`,
+    '  Este es el recorrido del pasaje. Sigamos su argumento punto por punto:',
+    ...points.map((point, index) => `  ${index + 1}. **${point.label}:** ${point.title}`),
   ].join('\n');
 }
 
@@ -90,10 +86,10 @@ export function buildTransitionPreview(points: MainPoint[]): string {
  */
 export function ensureOutlineTransition(content: string): string {
   if (!content) return content;
-  if (/oraci[óo]n\s+de\s+transici[óo]n/i.test(content)) return content;
+  if (/oraci[óo]n\s+de\s+transici[óo]n|bosquejo\s+(?:general|anticipado)/i.test(content)) return content;
 
   const points = extractMainPoints(content);
-  if (points.length < 3) return content;
+  if (points.length < 2) return content;
 
   const propMatch = content.match(/proposici[óo]n\s*\(la gran idea\)/i);
   if (!propMatch || propMatch.index === undefined) return content;
