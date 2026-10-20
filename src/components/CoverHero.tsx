@@ -209,7 +209,7 @@ export const CoverHero: React.FC = () => {
               </h1>
 
               <p className="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed font-sans font-normal">
-                Plataforma de análisis bíblico histórico-gramatical, bosquejos expositivos y notas pastorales para la proclamación fiel de la Palabra de Dios.
+                Tus estudios bíblicos, bosquejos expositivos y notas pastorales para la proclamación de la Palabra de Dios.
               </p>
 
               {/* Pilares */}
@@ -220,7 +220,7 @@ export const CoverHero: React.FC = () => {
                 </span>
                 <span className="px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-200 flex items-center gap-1.5 shadow-xs">
                   <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Raíces Griego / Hebreo</span>
+                  <span>Biblioteca de estudios</span>
                 </span>
                 <span className="px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-200 flex items-center gap-1.5 shadow-xs">
                   <ScrollText className="w-3.5 h-3.5 text-emerald-400" />
