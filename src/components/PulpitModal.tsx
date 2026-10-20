@@ -65,7 +65,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   translation,
   content,
 }) => {
-  const [fontSize, setFontSize] = useState<number>(20);
+  const [fontSize, setFontSize] = useState<number>(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 1024 ? 24 : 22
+  );
   const [theme, setTheme] = useState<PulpitTheme>('dark-oled');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [personalNote, setPersonalNote] = useState<string>('');
@@ -776,7 +778,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           {/* Text with dynamic font size */}
           <div
             className="pulpit-markdown markdown-theology prose max-w-none font-theology-serif"
-            style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
+            style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
