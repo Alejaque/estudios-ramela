@@ -258,6 +258,7 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    let providerError = '';
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 50000);
 
@@ -300,6 +301,7 @@ export default function App() {
                 }
                 if (data.error) {
                   streamFailed = true;
+                  providerError = data.error;
                   throw new Error(data.error);
                 }
               } catch (parseErr: any) {
@@ -317,7 +319,7 @@ export default function App() {
 
     window.clearTimeout(timer);
     if (streamFailed || !accumulatedText.trim()) {
-      setErrorMsg('El proveedor gratuito no pudo completar el estudio en el tiempo disponible. Reintentá más tarde. No se sustituyó por un bosquejo local.');
+      setErrorMsg((providerError || 'El proveedor gratuito no pudo completar el estudio en el tiempo disponible.') + ' Reintentá más tarde. No se sustituyó por un bosquejo local.');
       setIsLoading(false);
       setIsStreaming(false);
       return;
@@ -372,6 +374,7 @@ export default function App() {
 
     let accumulatedText = '';
     let streamFailed = false;
+    let providerError = '';
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 50000);
 
@@ -724,4 +727,4 @@ export default function App() {
       <OfflineIndicator />
     </div>
   );
-}
+                  }
