@@ -58,8 +58,6 @@ En seguimientos responde a la pregunta concreta con el mismo método. Respeta la
 
 export const MODEL_CANDIDATES = [
   'openrouter/free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemma-3-27b-it:free',
 ];
 
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -128,7 +126,7 @@ export async function requestFreeStudy(body: any, budgetMs = 45000) {
     const remaining = budgetMs - (Date.now() - started);
     if (remaining <= 0) break;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), Math.min(15000, remaining));
+    const timer = setTimeout(() => controller.abort(), remaining);
     try {
       const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST', headers: getHeaders(), signal: controller.signal,
