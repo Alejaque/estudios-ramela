@@ -382,8 +382,8 @@ export const StudyDisplay: React.FC<StudyDisplayProps> = ({
             <SectionCard
               id="seccion-2-bosquejo"
               sectionNumber={2}
-              title="Bosquejo Expositivo (Sencillo y Profundo)"
-              subtitle="Introducción, Proposición (Gran Idea), Oración de Transición y Vista Previa (Punto I, II y III), Desarrollo homilético y Reflexión Teológica"
+              title="Bosquejo Expositivo"
+              subtitle="Proposición pastoral, bosquejo, mapa de flujo, desarrollo y aplicación"
               content={sections.section2}
               iconName="file"
               accentColor="indigo"
