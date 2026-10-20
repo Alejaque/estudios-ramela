@@ -470,7 +470,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 w-screen h-dvh z-50 flex flex-col font-theology-serif select-none ${themeClasses}`}>
+    <div data-pulpit-theme={theme} className={`pulpit-view fixed inset-0 w-screen h-dvh z-50 flex flex-col font-theology-serif select-none ${themeClasses}`}>
       {verseRef && (
         <BibleVerseModal
           reference={verseRef}
@@ -671,7 +671,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       </div>
 
       {/* Quick Outline Jump Bar */}
-      <div className="px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs font-sans no-print">
+      <div className="pulpit-jumps px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs font-sans no-print">
         <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
           <Compass className="w-3.5 h-3.5 text-amber-400" />
           Salto rápido:
@@ -775,7 +775,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
           {/* Text with dynamic font size */}
           <div
-            className="markdown-theology prose prose-invert max-w-none font-theology-serif"
+            className="pulpit-markdown markdown-theology prose max-w-none font-theology-serif"
             style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
           >
             <ReactMarkdown
