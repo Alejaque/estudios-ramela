@@ -9,36 +9,18 @@ interface ExportPdfOptions {
 }
 
 // Fuente Unicode embebida (Noto Sans, OFL) para que el PDF muestre griego y acentos.
-// Se sirve desde /public/fonts y queda precacheada por el service worker (funciona sin Internet tras la primera carga).
-const FONT_FILES: Record<string, string> = {
-  normal: '/fonts/NotoSans-Regular.ttf',
-  bold: '/fonts/NotoSans-Bold.ttf',
-  italic: '/fonts/NotoSans-Italic.ttf',
-  bolditalic: '/fonts/NotoSans-BoldItalic.ttf',
-};
+// Las fuentes van en base64 dentro de módulos con carga diferida (code-splitting): sólo se
+// descargan cuando se genera un PDF y quedan precacheadas por el service worker.
 let fontsPromise: Promise<boolean> | null = null;
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunk = 8192;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
-  }
-  return btoa(binary);
-}
 
 // Devuelve true si la fuente Unicode quedó registrada; false -> se usa helvetica (sin griego).
 function ensureUnicodeFont(doc: jsPDF): Promise<boolean> {
   if (!fontsPromise) {
     fontsPromise = (async () => {
       try {
-        for (const [style, url] of Object.entries(FONT_FILES)) {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`font ${style}: ${res.status}`);
-          const b64 = arrayBufferToBase64(await res.arrayBuffer());
-          const file = url.split('/').pop()!;
-          doc.addFileToVFS(file, b64);
+        const { NOTO_FONT_FILES } = await import('./fonts/notoSansFonts');
+        for (const [style, { file, base64 }] of Object.entries(NOTO_FONT_FILES)) {
+          doc.addFileToVFS(file, base64);
           doc.addFont(file, 'NotoSans', style);
         }
         return true;
