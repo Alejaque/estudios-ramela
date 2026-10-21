@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { PulpitModal } from './PulpitModal';
 import { exportStudyToPdf } from '../utils/pdfExport';
-import { rvr1960Url } from '../utils/bibleRef';
+import { rvr1960Url, stepBibleUrl } from '../utils/bibleRef';
 import type { PersonalStudyDoc } from '../types';
 
 const STORAGE_KEY = 'personal_studies';
@@ -190,9 +190,7 @@ export const PersonalStudy: React.FC = () => {
   }
 
   const rvrUrl = doc ? rvr1960Url(doc.passageOrTopic) : null;
-  const stepUrl = doc
-    ? `https://www.stepbible.org/?q=reference=${encodeURIComponent(doc.passageOrTopic)}`
-    : null;
+  const stepUrl = doc ? stepBibleUrl(doc.passageOrTopic) : null;
 
   return (
     <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
