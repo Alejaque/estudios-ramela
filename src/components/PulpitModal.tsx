@@ -541,7 +541,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </div>
 
         {/* Preaching Stopwatch Controls (en celular vive en el widget flotante) */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 min-w-0">
           <div
             className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-xl font-mono text-sm font-bold border transition-colors ${
               isTimeExceeded
