@@ -8,7 +8,49 @@ interface ExportPdfOptions {
   personalNotes?: string;
 }
 
-export function exportStudyToPdf({
+// Fuente Unicode embebida (Noto Sans, OFL) para que el PDF muestre griego y acentos.
+// Se sirve desde /public/fonts y queda precacheada por el service worker (funciona sin Internet tras la primera carga).
+const FONT_FILES: Record<string, string> = {
+  normal: '/fonts/NotoSans-Regular.ttf',
+  bold: '/fonts/NotoSans-Bold.ttf',
+  italic: '/fonts/NotoSans-Italic.ttf',
+  bolditalic: '/fonts/NotoSans-BoldItalic.ttf',
+};
+let fontsPromise: Promise<boolean> | null = null;
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunk = 8192;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
+  }
+  return btoa(binary);
+}
+
+// Devuelve true si la fuente Unicode quedó registrada; false -> se usa helvetica (sin griego).
+function ensureUnicodeFont(doc: jsPDF): Promise<boolean> {
+  if (!fontsPromise) {
+    fontsPromise = (async () => {
+      try {
+        for (const [style, url] of Object.entries(FONT_FILES)) {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`font ${style}: ${res.status}`);
+          const b64 = arrayBufferToBase64(await res.arrayBuffer());
+          const file = url.split('/').pop()!;
+          doc.addFileToVFS(file, b64);
+          doc.addFont(file, 'NotoSans', style);
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+  }
+  return fontsPromise;
+}
+
+export async function exportStudyToPdf({
   passageOrTopic,
   translation = 'Reina-Valera 1960 (RVR1960)',
   content,
@@ -19,6 +61,9 @@ export function exportStudyToPdf({
     unit: 'mm',
     format: 'a4',
   });
+
+  const hasUnicodeFont = await ensureUnicodeFont(doc);
+  const bodyFont = hasUnicodeFont ? 'NotoSans' : 'helvetica';
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -36,7 +81,7 @@ export function exportStudyToPdf({
 
   const drawHeaderFooter = () => {
     // Top subtle running header
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(bodyFont, 'normal');
     doc.setFontSize(8);
     doc.setTextColor(130, 140, 155);
     doc.text('ESTUDIOS ALEJANDRO RAMELA • EXÉGESIS & HOMILÉTICA EXPOSITIVA', margin, 11);
@@ -50,7 +95,7 @@ export function exportStudyToPdf({
   doc.roundedRect(margin, cursorY, contentWidth, 26, 3, 3, 'F');
 
   doc.setTextColor(251, 191, 36); // Amber 400
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(bodyFont, 'bold');
   doc.setFontSize(8.5);
   doc.text('PLATAFORMA TEOLÓGICA • BOSQUEJO PARA EL PÚLPITO', margin + 6, cursorY + 8);
 
@@ -58,7 +103,7 @@ export function exportStudyToPdf({
   doc.setFontSize(14);
   doc.text('Estudios Alejandro Ramela', margin + 6, cursorY + 16);
 
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(bodyFont, 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(203, 213, 225);
   const dateStr = new Date().toLocaleDateString('es-ES', {
@@ -72,14 +117,14 @@ export function exportStudyToPdf({
 
   // Title Box: Passage and Translation
   doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(bodyFont, 'bold');
   doc.setFontSize(18);
   const titleLines = doc.splitTextToSize(passageOrTopic, contentWidth);
   doc.text(titleLines, margin, cursorY);
   cursorY += titleLines.length * 7;
 
   // Subtitle
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(bodyFont, 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(71, 85, 105);
   doc.text(`Texto base: ${translation} • Enfoque: Histórico-Gramatical y Homilético`, margin, cursorY);
@@ -111,7 +156,7 @@ export function exportStudyToPdf({
       doc.setFillColor(30, 58, 138); // Blue 900
       doc.roundedRect(margin, cursorY - 3.5, contentWidth, 8, 1.5, 1.5, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(bodyFont, 'bold');
       doc.setFontSize(11);
       const headingText = line.replace(/^#\s+/, '').replace(/\*\*/g, '');
       doc.text(headingText, margin + 4, cursorY + 2.5);
@@ -126,7 +171,7 @@ export function exportStudyToPdf({
       doc.setFillColor(241, 245, 249); // Slate 100
       doc.roundedRect(margin, cursorY - 3, contentWidth, 7, 1, 1, 'F');
       doc.setTextColor(30, 41, 59); // Slate 800
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(bodyFont, 'bold');
       doc.setFontSize(10);
       const headingText = line.replace(/^##\s+/, '').replace(/\*\*/g, '');
       doc.text(headingText, margin + 3, cursorY + 2);
@@ -138,7 +183,7 @@ export function exportStudyToPdf({
     if (line.startsWith('### ')) {
       checkPageBreak(10);
       doc.setTextColor(180, 83, 9); // Amber 700
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(bodyFont, 'bold');
       doc.setFontSize(9.5);
       const headingText = line.replace(/^###\s+/, '').replace(/\*\*/g, '');
       const wrapped = doc.splitTextToSize(headingText, contentWidth);
@@ -154,12 +199,12 @@ export function exportStudyToPdf({
       const bulletPrefix = isNumbered ? line.match(/^\d+\.\s/)?.[0] || '• ' : '• ';
       const cleanText = line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').replace(/\*\*/g, '');
 
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(bodyFont, 'bold');
       doc.setFontSize(9);
       doc.setTextColor(30, 58, 138); // Bullet in dark blue
       doc.text(bulletPrefix, margin + 2, cursorY);
 
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(bodyFont, 'normal');
       doc.setTextColor(51, 65, 85);
       const textLines = doc.splitTextToSize(cleanText, contentWidth - 8);
       doc.text(textLines, margin + 7, cursorY);
@@ -173,7 +218,7 @@ export function exportStudyToPdf({
       const quoteText = line.replace(/^>\s*/, '').replace(/\*\*/g, '');
       doc.setFillColor(254, 243, 199); // Amber 100
       doc.rect(margin, cursorY - 2, 2, 6, 'F');
-      doc.setFont('helvetica', 'italic');
+      doc.setFont(bodyFont, 'italic');
       doc.setFontSize(8.5);
       doc.setTextColor(120, 53, 15); // Amber 900
       const quoteLines = doc.splitTextToSize(quoteText, contentWidth - 6);
@@ -184,7 +229,7 @@ export function exportStudyToPdf({
 
     // Standard body text
     checkPageBreak(6);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(bodyFont, 'normal');
     doc.setFontSize(9);
     doc.setTextColor(30, 41, 59);
     const cleanBody = line.replace(/\*\*/g, '');
@@ -201,12 +246,12 @@ export function exportStudyToPdf({
     doc.setDrawColor(217, 119, 6);
     doc.roundedRect(margin, cursorY, contentWidth, 10, 2, 2, 'FD');
     doc.setTextColor(146, 64, 14);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(bodyFont, 'bold');
     doc.setFontSize(10.5);
     doc.text('NOTAS Y REFLEXIONES PERSONALES DEL EXPOSITOR', margin + 5, cursorY + 6.5);
     cursorY += 15;
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(bodyFont, 'normal');
     doc.setFontSize(9);
     doc.setTextColor(51, 65, 85);
     const noteLines = doc.splitTextToSize(personalNotes.trim(), contentWidth);
@@ -221,7 +266,7 @@ export function exportStudyToPdf({
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(bodyFont, 'normal');
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
 
