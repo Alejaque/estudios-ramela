@@ -10,6 +10,7 @@ export const maxDuration = 60;
 // de fuentes propia. Sin fuente recuperada para el pasaje, no se consulta al modelo:
 // se reconoce el límite en vez de improvisar.
 // Clave en GEMINI_API_KEY (entorno del servidor, nunca en el cliente).
+// Alcance del prototipo: recuperación verificada para Juan 6 (Henry, dominio público).
 
 const SYSTEM_PROMPT = `Sos una herramienta de consulta para el estudio bíblico personal de un pastor que prepara sus propios sermones expositivos. Recibís FRAGMENTOS RECUPERADOS de una fuente real (comentario de dominio público) y una pregunta sobre un pasaje. Reglas estrictas:
 - Respondé en español claro y breve (máximo unas 300 palabras), con tono respetuoso.
