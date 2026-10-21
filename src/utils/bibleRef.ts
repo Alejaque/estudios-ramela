@@ -119,6 +119,9 @@ export const BIBLE_ATLAS_URL = 'https://bible-atlas.com/es';
 // Contexto historico-cultural y mapas (Bible History, en ingles).
 export const BIBLE_HISTORY_URL = 'https://bible-history.com/biblemaps';
 
+// Diccionario biblico en espanol (BibliaTodo): terminos, personas, lugares y costumbres.
+export const DICCIONARIO_URL = 'https://www.bibliatodo.com/Diccionario-biblico';
+
 // Slugs verificados de BibleHub para referencias cruzadas (en ingles), por versiculo inicial.
 const BIBLEHUB: Record<string, string> = {
   GEN:'genesis', EXO:'exodus', LEV:'leviticus', NUM:'numbers', DEU:'deuteronomy', JOS:'joshua', JDG:'judges', RUT:'ruth',
