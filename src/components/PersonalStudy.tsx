@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { PulpitModal } from './PulpitModal';
 import { exportStudyToPdf } from '../utils/pdfExport';
-import { rvr1960Url, stepBibleUrl } from '../utils/bibleRef';
+import { rvr1960Url, stepBibleUrl, blbUrl } from '../utils/bibleRef';
 import type { PersonalStudyDoc } from '../types';
 
 const STORAGE_KEY = 'personal_studies';
@@ -191,6 +191,7 @@ export const PersonalStudy: React.FC = () => {
 
   const rvrUrl = doc ? rvr1960Url(doc.passageOrTopic) : null;
   const stepUrl = doc ? stepBibleUrl(doc.passageOrTopic) : null;
+  const blbLink = doc ? blbUrl(doc.passageOrTopic) : null;
 
   return (
     <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
@@ -200,7 +201,7 @@ export const PersonalStudy: React.FC = () => {
         </h2>
         <p className="text-sm opacity-75 mb-4">
           Tu espacio para estudiar el pasaje a solas con la Biblia, tomar apuntes y elaborar tu
-          propio sermón. Se guarda en este dispositivo y funciona sin Internet.
+          propio sermón. Tus apuntes se guardan en este dispositivo; la primera carga de la página necesita Internet.
         </p>
         <form onSubmit={createStudy} className="mb-5 space-y-3">
           <label className="block font-semibold" htmlFor="ps-passage">
@@ -341,8 +342,8 @@ export const PersonalStudy: React.FC = () => {
           <details className="mb-6 border-y border-[#cbd4c9] dark:border-[#405245] py-3" open>
             <summary className="font-semibold cursor-pointer">Herramientas de estudio</summary>
             <p className="text-sm opacity-75 mt-3 mb-3">
-              Estas herramientas externas son gratuitas y necesitan Internet. Todo lo que escribás
-              en los apartados queda guardado acá, sin conexión.
+              Estas herramientas externas son gratuitas, están en inglés y necesitan Internet.
+              Todo lo que escribás en los apartados queda guardado acá, en este dispositivo.
             </p>
             <div className="flex flex-wrap gap-2">
               {rvrUrl && (
@@ -356,7 +357,7 @@ export const PersonalStudy: React.FC = () => {
                 </a>
               )}
               <a
-                href="https://www.blueletterbible.org/"
+                href={blbLink || 'https://www.blueletterbible.org/'}
                 target="_blank"
                 rel="noreferrer"
                 className="library-control text-sm"
