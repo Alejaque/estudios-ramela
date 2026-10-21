@@ -24,6 +24,7 @@ import {
   macarthurIntroUrl,
   crossRefsUrl,
   BIBLE_ATLAS_URL,
+  DICCIONARIO_URL,
   BIBLE_HISTORY_URL,
 } from '../utils/bibleRef';
 import type { PersonalStudyDoc } from '../types';
@@ -458,6 +459,15 @@ export const PersonalStudy: React.FC = () => {
                 title="Mapas interactivos, cronologías y genealogías (Bible Atlas, en español)"
               >
                 Atlas bíblico: mapas (español) <ExternalLink size={13} />
+              </a>
+              <a
+                href={DICCIONARIO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="library-control text-sm"
+                title="Diccionario bíblico en español (BibliaTodo): términos, personas, lugares y costumbres"
+              >
+                Diccionario bíblico (español) <ExternalLink size={13} />
               </a>
               <a
                 href={BIBLE_HISTORY_URL}
