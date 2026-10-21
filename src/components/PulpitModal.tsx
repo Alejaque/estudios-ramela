@@ -17,6 +17,7 @@ import {
   FileDown,
   Palette,
   ChevronRight,
+  Bold,
   ArrowLeft,
   Timer,
   Maximize2,
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 import { exportStudyToPdf } from '../utils/pdfExport';
 import { ensureOutlineTransition } from '../utils/outlineTransition';
+import { buildPulpitSummary, highlightKeyIdeas } from '../utils/pulpitSummary';
 import { useModalBackButton } from '../hooks/useModalBackButton';
 import { BibleVerseModal } from './BibleVerseModal';
 
@@ -68,7 +70,22 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   const [fontSize, setFontSize] = useState<number>(() =>
     typeof window !== 'undefined' && window.innerWidth <= 1024 ? 24 : 22
   );
-  const [theme, setTheme] = useState<PulpitTheme>('dark-oled');
+  const [theme, setTheme] = useState<PulpitTheme>(() => {
+    try {
+      const saved = localStorage.getItem('pulpit_theme');
+      if (saved === 'dark-oled' || saved === 'sepia' || saved === 'light' || saved === 'midnight') {
+        return saved;
+      }
+    } catch {
+      // Sin storage disponible: arranca en oscuro.
+    }
+    return 'dark-oled';
+  });
+  // Vista resumida del estudio y resaltado de las ideas principales.
+  const [viewMode, setViewMode] = useState<'full' | 'summary'>('full');
+  const [highlightIdeas, setHighlightIdeas] = useState<boolean>(() => {
+    try { return localStorage.getItem('pulpit_highlight') !== '0'; } catch { return true; }
+  });
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [personalNote, setPersonalNote] = useState<string>('');
   const [verseRef, setVerseRef] = useState<string | null>(null);
@@ -189,6 +206,14 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       // Storage lleno o deshabilitado: conservar las preferencias en memoria.
     }
   }, [isOpen, timerPreferencesLoaded, timerScale, timerPosition, timerCompact]);
+
+  // Recordar el tema elegido y la preferencia de resaltado entre sesiones.
+  useEffect(() => {
+    try { localStorage.setItem('pulpit_theme', theme); } catch { /* sin storage */ }
+  }, [theme]);
+  useEffect(() => {
+    try { localStorage.setItem('pulpit_highlight', highlightIdeas ? '1' : '0'); } catch { /* sin storage */ }
+  }, [highlightIdeas]);
 
   const handleTimerPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || timerDragRef.current) return;
@@ -311,6 +336,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
   // Bosquejo con la Oración de Transición y Vista Previa tras la Gran Idea.
   const displayContent = ensureOutlineTransition(content);
+  const readingContent = highlightIdeas ? highlightKeyIdeas(displayContent) : displayContent;
+  const pulpitSummary = viewMode === 'summary' ? buildPulpitSummary(displayContent) : null;
 
   const handlePrint = () => window.print();
 
@@ -386,15 +413,18 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   };
 
   const scrollToHeading = (textSnippet: string) => {
-    if (!scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
     const needle = normalizeText(textSnippet);
-    const elements = scrollContainerRef.current.querySelectorAll('h1, h2, h3, h4, strong, li, p');
-    for (const el of Array.from(elements)) {
-      if (normalizeText(el.textContent ?? '').includes(needle)) {
-        scrollWithinContainer(el);
-        break;
-      }
-    }
+    const findIn = (selector: string) =>
+      Array.from(container.querySelectorAll(selector)).find((el) =>
+        normalizeText(el.textContent ?? '').includes(needle)
+      );
+    // Primero los encabezados: si no, "Conclusión" cae en el párrafo de
+    // Explicación del Punto III ("la multitud saca una conclusión...") y
+    // "Oración" cae en la Oración de Transición en vez de la final.
+    const target = findIn('h1, h2, h3, h4') ?? findIn('strong, li, p');
+    if (target) scrollWithinContainer(target);
   };
 
   /**
@@ -606,32 +636,26 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             </button>
           </div>
 
-          {/* Theme Selector */}
-          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setTheme('dark-oled')}
-              title="Tema OLED Negro puro"
-              className={`px-2 py-1 rounded-lg cursor-pointer ${theme === 'dark-oled' ? 'bg-zinc-800 text-white font-bold' : 'text-slate-400'}`}
-            >
-              🖤
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme('sepia')}
-              title="Tema Sepia Pergamino"
-              className={`px-2 py-1 rounded-lg cursor-pointer ${theme === 'sepia' ? 'bg-amber-200 text-amber-950 font-bold' : 'text-slate-400'}`}
-            >
-              📜
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme('light')}
-              title="Tema Luz Blanco"
-              className={`px-2 py-1 rounded-lg cursor-pointer ${theme === 'light' ? 'bg-white text-slate-900 font-bold' : 'text-slate-400'}`}
-            >
-              ☀️
-            </button>
+          {/* Theme Selector: con etiqueta de texto para que "volver a oscuro" sea obvio */}
+          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 p-0.5 text-[11px] font-semibold" role="group" aria-label="Tema del púlpito">
+            {([
+              ['dark-oled', '🌙 Oscuro', 'Tema oscuro'],
+              ['sepia', '📜 Sepia', 'Tema sepia'],
+              ['light', '☀️ Claro', 'Tema claro'],
+            ] as Array<[PulpitTheme, string, string]>).map(([value, label, title]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTheme(value)}
+                title={title}
+                aria-pressed={theme === value}
+                className={`px-2.5 min-h-[40px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
+                  theme === value ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Fullscreen */}
@@ -672,8 +696,33 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </div>
       </div>
 
-      {/* Quick Outline Jump Bar */}
+      {/* Vista del estudio + Quick Outline Jump Bar */}
       <div className="pulpit-jumps px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs font-sans no-print">
+        <div className="flex items-center rounded-lg bg-white/10 p-0.5 shrink-0 mr-1" role="group" aria-label="Vista del estudio">
+          <button
+            type="button"
+            onClick={() => setViewMode('full')}
+            aria-pressed={viewMode === 'full'}
+            className={`px-3 py-2 rounded-md cursor-pointer whitespace-nowrap transition-colors ${
+              viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            Completo
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('summary')}
+            aria-pressed={viewMode === 'summary'}
+            title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
+            className={`px-3 py-2 rounded-md cursor-pointer whitespace-nowrap transition-colors ${
+              viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            ⚡ Resumen
+          </button>
+        </div>
+        {viewMode === 'full' && (
+        <>
         <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
           <Compass className="w-3.5 h-3.5 text-amber-400" />
           Salto rápido:
@@ -689,6 +738,20 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           >
             ✍️ Mis Notas
           </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setHighlightIdeas(!highlightIdeas)}
+          aria-pressed={highlightIdeas}
+          title="Resaltar en negrita las ideas principales de cada sección"
+          className={`px-3 py-2 rounded-lg shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
+            highlightIdeas ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          <Bold className="w-3.5 h-3.5" />
+          Ideas
+        </button>
+        </>
         )}
       </div>
 
@@ -719,12 +782,24 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             className="pulpit-markdown markdown-theology prose max-w-none font-theology-serif"
             style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
           >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{ strong: BoldAsVerse }}
-            >
-              {displayContent}
-            </ReactMarkdown>
+            {viewMode === 'summary' ? (
+              pulpitSummary ? (
+                <PulpitSummaryView summary={pulpitSummary} />
+              ) : (
+                <p>
+                  Este estudio todavía no tiene una estructura que el resumen pueda
+                  reconocer (proposición, puntos y conclusión). Miralo en la vista
+                  Completo.
+                </p>
+              )
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{ strong: BoldAsVerse }}
+              >
+                {readingContent}
+              </ReactMarkdown>
+            )}
           </div>
 
           {/* Personal Preacher's Notes at the bottom */}
@@ -954,6 +1029,74 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </>
         )}
       </div>
+    </div>
+  );
+};
+
+/**
+ * Vista resumida del estudio para predicar: punto principal, cada punto con
+ * una explicación corta, aplicación práctica, conclusión, llamado y oración.
+ * Todo el texto viene del estudio cargado (ver buildPulpitSummary); no se
+ * genera contenido nuevo.
+ */
+const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').PulpitSummary }> = ({ summary }) => {
+  const applications = summary.points.filter((point) => point.application);
+  return (
+    <div className="pulpit-summary space-y-7">
+      <p className="text-sm opacity-70 font-sans italic border border-dashed border-current/30 rounded-xl px-4 py-3">
+        Resumen armado con las palabras de tu estudio. Revisalo contra la vista
+        Completo antes de predicar.
+      </p>
+      {summary.proposition && (
+        <section>
+          <h2>Punto principal</h2>
+          <p>
+            <strong>{summary.proposition}.</strong>
+          </p>
+        </section>
+      )}
+      {summary.points.length > 0 && (
+        <section className="space-y-5">
+          {summary.points.map((point) => (
+            <div key={point.numeral}>
+              <h3>{point.title}</h3>
+              {point.explanation && <p>{point.explanation}</p>}
+            </div>
+          ))}
+        </section>
+      )}
+      {applications.length > 0 && (
+        <section>
+          <h2>Aplicación práctica</h2>
+          <ul>
+            {applications.map((point) => (
+              <li key={point.numeral}>{point.application}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {summary.conclusion && (
+        <section>
+          <h2>Conclusión</h2>
+          <p>{summary.conclusion}</p>
+        </section>
+      )}
+      {summary.call && (
+        <section>
+          <h2>Llamado a la acción</h2>
+          <p>
+            <strong>{summary.call}</strong>
+          </p>
+        </section>
+      )}
+      {summary.prayer && (
+        <section>
+          <h2>Oración</h2>
+          {summary.prayer.split('\n\n').map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </section>
+      )}
     </div>
   );
 };
