@@ -53,3 +53,15 @@ export function stepBibleUrl(ref: string): string | null {
   if (v1 && v2 && (!ch2 || ch2 === ch)) id += `-${v2}`;
   return `https://www.stepbible.org/?q=reference=${encodeURIComponent(id)}`;
 }
+
+// Enlace a Blue Letter Bible (texto RVR60 con léxico/comentarios, interfaz en inglés).
+export function blbUrl(ref: string): string | null {
+  const m = norm(ref).match(/^((?:[123] ?)?[a-z ]+?)\s*(\d+)(?::(\d+)(?:\s*-\s*(?:(\d+):)?(\d+))?)?$/);
+  if (!m) return null;
+  const book = BOOKS[m[1].replace(/^([123]) ?/, '$1 ')];
+  const osis = book && OSIS[book];
+  if (!osis) return null;
+  const [, , ch, v1] = m;
+  const b = osis.toLowerCase();
+  return `https://www.blueletterbible.org/rvr60/${b}/${ch}/${v1 || '1'}/`;
+}
