@@ -95,6 +95,18 @@ function assembleSermon(s: PersonalStudyDoc): string {
   return parts.join('\n\n');
 }
 
+function sameStudyContent(a: PersonalStudyDoc, b: PersonalStudyDoc): boolean {
+  const canon = (s: PersonalStudyDoc) =>
+    JSON.stringify({
+      title: s.title,
+      passageOrTopic: s.passageOrTopic,
+      sections: Object.keys(s.sections || {})
+        .sort()
+        .map((k) => [k, s.sections[k]]),
+    });
+  return canon(a) === canon(b);
+}
+
 export const PersonalStudy: React.FC = () => {
   const [studies, setStudies] = useState<PersonalStudyDoc[]>(loadStudies);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -104,6 +116,10 @@ export const PersonalStudy: React.FC = () => {
   const [preview, setPreview] = useState(false);
   const [pulpit, setPulpit] = useState(false);
   const [importError, setImportError] = useState('');
+  const [importConflicts, setImportConflicts] = useState<{
+    incoming: PersonalStudyDoc[];
+    conflicts: PersonalStudyDoc[];
+  } | null>(null);
   const saveTimer = useRef<number | null>(null);
 
   const doc = studies.find((s) => s.id === selectedId) || null;
@@ -180,13 +196,37 @@ export const PersonalStudy: React.FC = () => {
       );
       if (!valid) throw Error();
       const incoming = list as PersonalStudyDoc[];
-      const next = [...incoming, ...studies.filter((s) => !incoming.some((i) => i.id === s.id))];
-      setStudies(next);
-      persistStudies(next);
-      setImportError('');
+      const conflicts = incoming.filter((i) => {
+        const local = studies.find((s) => s.id === i.id);
+        return local && !sameStudyContent(local, i);
+      });
+      if (conflicts.length > 0) {
+        setImportConflicts({ incoming, conflicts });
+        return;
+      }
+      applyImport(incoming, []);
     } catch {
       setImportError('No se pudo abrir el archivo. Usá la copia JSON exportada desde esta sección.');
     }
+  }
+
+  function applyImport(incoming: PersonalStudyDoc[], skipIds: string[]) {
+    const accepted = incoming.filter((i) => !skipIds.includes(i.id));
+    const next = [...accepted, ...studies.filter((s) => !accepted.some((i) => i.id === s.id))];
+    setStudies(next);
+    persistStudies(next);
+    setImportError('');
+  }
+
+  function resolveImport(action: 'replace' | 'skip' | 'cancel') {
+    if (!importConflicts) return;
+    const { incoming, conflicts } = importConflicts;
+    setImportConflicts(null);
+    if (action === 'cancel') return;
+    applyImport(
+      incoming,
+      action === 'skip' ? conflicts.map((c) => c.id) : []
+    );
   }
 
   const rvrUrl = doc ? rvr1960Url(doc.passageOrTopic) : null;
@@ -408,6 +448,36 @@ export const PersonalStudy: React.FC = () => {
           translation="Reina-Valera 1960 (RVR1960)"
           content={sermon}
         />
+      )}
+
+      {importConflicts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="rounded-2xl border border-[#cbd4c9] dark:border-[#405245] bg-[#fffdf8] dark:bg-[#18241d] max-w-md w-full p-6 space-y-4">
+            <h3 className="font-serif text-xl">Estudios con contenido diferente</h3>
+            <p className="text-sm opacity-80">
+              {importConflicts.conflicts.length === 1
+                ? 'La copia trae 1 estudio que ya existe en este dispositivo con contenido diferente.'
+                : `La copia trae ${importConflicts.conflicts.length} estudios que ya existen en este dispositivo con contenido diferente.`}{' '}
+              Si los reemplazás, se pierden los apuntes que están guardados acá.
+            </p>
+            <ul className="text-sm list-disc pl-5 space-y-1">
+              {importConflicts.conflicts.map((c) => (
+                <li key={c.id}>{c.title || c.passageOrTopic}</li>
+              ))}
+            </ul>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button className="library-control" onClick={() => resolveImport('replace')}>
+                Reemplazar con la copia
+              </button>
+              <button className="library-control" onClick={() => resolveImport('skip')}>
+                Omitir esos
+              </button>
+              <button className="library-control" onClick={() => resolveImport('cancel')}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
