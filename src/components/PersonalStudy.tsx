@@ -15,6 +15,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { PulpitModal } from './PulpitModal';
+import { PassageConsult } from './PassageConsult';
 import { exportStudyToPdf } from '../utils/pdfExport';
 import {
   rvr1960Url,
@@ -480,6 +481,20 @@ export const PersonalStudy: React.FC = () => {
               </a>
             </div>
           </details>
+
+          <PassageConsult
+            passage={doc.passageOrTopic}
+            sections={ALL_SECTIONS}
+            onSave={(key, text) =>
+              updateDoc((s) => ({
+                ...s,
+                sections: {
+                  ...s.sections,
+                  [key]: ((s.sections[key] || '').trimEnd() + '\n\n' + text).trim(),
+                },
+              }))
+            }
+          />
 
           {preview && (
             <article
