@@ -11,25 +11,24 @@ interface ExportPdfOptions {
 // Fuente Unicode embebida (Noto Sans, OFL) para que el PDF muestre griego y acentos.
 // Las fuentes van en base64 dentro de módulos con carga diferida (code-splitting): sólo se
 // descargan cuando se genera un PDF y quedan precacheadas por el service worker.
-let fontsPromise: Promise<boolean> | null = null;
+let fontDataPromise: Promise<Record<string, { file: string; base64: string }>> | null = null;
 
-// Devuelve true si la fuente Unicode quedó registrada; false -> se usa helvetica (sin griego).
-function ensureUnicodeFont(doc: jsPDF): Promise<boolean> {
-  if (!fontsPromise) {
-    fontsPromise = (async () => {
-      try {
-        const { NOTO_FONT_FILES } = await import('./fonts/notoSansFonts');
-        for (const [style, { file, base64 }] of Object.entries(NOTO_FONT_FILES)) {
-          doc.addFileToVFS(file, base64);
-          doc.addFont(file, 'NotoSans', style);
-        }
-        return true;
-      } catch {
-        return false;
-      }
-    })();
+// Registra la fuente en ESTE documento (jsPDF la necesita por instancia).
+// Devuelve true si quedó registrada; false -> se usa helvetica (sin griego).
+async function ensureUnicodeFont(doc: jsPDF): Promise<boolean> {
+  try {
+    if (!fontDataPromise) {
+      fontDataPromise = import('./fonts/notoSansFonts').then((m) => m.NOTO_FONT_FILES);
+    }
+    const fonts = await fontDataPromise;
+    for (const [style, { file, base64 }] of Object.entries(fonts)) {
+      doc.addFileToVFS(file, base64);
+      doc.addFont(file, 'NotoSans', style);
+    }
+    return true;
+  } catch {
+    return false;
   }
-  return fontsPromise;
 }
 
 export async function exportStudyToPdf({
