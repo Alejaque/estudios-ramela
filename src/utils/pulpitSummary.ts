@@ -60,6 +60,28 @@ export function keySentence(paragraph: string): string {
   return (end === -1 ? text : text.slice(0, end)).trim();
 }
 
+/**
+ * Variante para el resumen: si la idea quedó demasiado corta para ser útil
+ * al predicar ("Jesús no improvisa."), suma las oraciones siguientes hasta
+ * llegar a minChars aprox. (máx. 4 extensiones). Sigue siendo texto literal
+ * del estudio, solo más completo.
+ */
+export function keySentences(paragraph: string, minChars = 140): string {
+  const text = paragraph.trim();
+  let end = firstSentenceEnd(text);
+  if (end === -1) return text;
+  if (end <= 18) {
+    const next = firstSentenceEnd(text, end);
+    if (next !== -1) end = next;
+  }
+  for (let i = 0; i < 4 && end < minChars; i++) {
+    const next = firstSentenceEnd(text, end);
+    if (next === -1) break;
+    end = next;
+  }
+  return text.slice(0, end).trim();
+}
+
 /** Últimas `count` oraciones del párrafo (para el llamado final). */
 function lastSentences(paragraph: string, count: number): string {
   const text = paragraph.trim();
@@ -149,14 +171,14 @@ export function buildPulpitSummary(content: string): PulpitSummary | null {
     return {
       numeral,
       title: sec.title,
-      explanation: expl ? keySentence(stripMd(expl)) : undefined,
-      application: appl ? keySentence(stripMd(appl)) : undefined,
+      explanation: expl ? keySentences(stripMd(expl), 140) : undefined,
+      application: appl ? keySentences(stripMd(appl), 140) : undefined,
     };
   });
 
   const conclParagraph = firstPlainParagraph(conclSec);
   if (conclParagraph) {
-    summary.conclusion = keySentence(stripMd(conclParagraph));
+    summary.conclusion = keySentences(stripMd(conclParagraph), 200);
     summary.call = lastSentences(stripMd(conclParagraph), 2);
   }
 
