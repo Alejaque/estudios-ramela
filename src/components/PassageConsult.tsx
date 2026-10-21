@@ -67,7 +67,7 @@ export const PassageConsult: React.FC<PassageConsultProps> = ({ passage, section
       <p className="text-sm opacity-75 mt-3 mb-3">
         La pregunta sale de este dispositivo y Google puede usarla para mejorar sus productos.
         Escribí solo preguntas generales sobre el pasaje: sin datos personales ni situaciones
-        privadas de la iglesia. Tus apuntes nunca se envían. Necesita Internet.
+        privadas de la iglesia. Tus apuntes nunca se envían. Las citas las genera el asistente y pueden tener errores: comprobalas siempre en la fuente enlazada. Necesita Internet.
       </p>
       <form onSubmit={ask} className="space-y-2">
         <textarea
