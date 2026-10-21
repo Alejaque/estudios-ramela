@@ -16,7 +16,16 @@ import {
 } from 'lucide-react';
 import { PulpitModal } from './PulpitModal';
 import { exportStudyToPdf } from '../utils/pdfExport';
-import { rvr1960Url, stepBibleUrl, blbUrl } from '../utils/bibleRef';
+import {
+  rvr1960Url,
+  stepBibleUrl,
+  blbUrl,
+  matthewHenryUrl,
+  macarthurIntroUrl,
+  crossRefsUrl,
+  BIBLE_ATLAS_URL,
+  BIBLE_HISTORY_URL,
+} from '../utils/bibleRef';
 import type { PersonalStudyDoc } from '../types';
 
 const STORAGE_KEY = 'personal_studies';
@@ -232,6 +241,9 @@ export const PersonalStudy: React.FC = () => {
   const rvrUrl = doc ? rvr1960Url(doc.passageOrTopic) : null;
   const stepUrl = doc ? stepBibleUrl(doc.passageOrTopic) : null;
   const blbLink = doc ? blbUrl(doc.passageOrTopic) : null;
+  const mhUrl = doc ? matthewHenryUrl(doc.passageOrTopic) : null;
+  const macUrl = doc ? macarthurIntroUrl(doc.passageOrTopic) : null;
+  const crossUrl = doc ? crossRefsUrl(doc.passageOrTopic) : null;
 
   return (
     <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
@@ -382,8 +394,9 @@ export const PersonalStudy: React.FC = () => {
           <details className="mb-6 border-y border-[#cbd4c9] dark:border-[#405245] py-3" open>
             <summary className="font-semibold cursor-pointer">Herramientas de estudio</summary>
             <p className="text-sm opacity-75 mt-3 mb-3">
-              Estas herramientas externas son gratuitas, están en inglés y necesitan Internet.
-              Todo lo que escribás en los apartados queda guardado acá, en este dispositivo.
+              Herramientas externas gratuitas; cada botón indica su idioma. Necesitan Internet
+              (no se descargan al dispositivo). Todo lo que escribás en los apartados queda
+              guardado acá, en este dispositivo.
             </p>
             <div className="flex flex-wrap gap-2">
               {rvrUrl && (
@@ -402,7 +415,58 @@ export const PersonalStudy: React.FC = () => {
                 rel="noreferrer"
                 className="library-control text-sm"
               >
-                Léxico y comentarios (Blue Letter Bible) <ExternalLink size={13} />
+                Léxico y comentarios (Blue Letter Bible, inglés) <ExternalLink size={13} />
+              </a>
+              {mhUrl && (
+                <a
+                  href={mhUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="library-control text-sm"
+                  title="Comentario Bíblico de Matthew Henry, en español, sobre RVR1960 (BibliaTodo)"
+                >
+                  Comentario Matthew Henry (español) <ExternalLink size={13} />
+                </a>
+              )}
+              {macUrl && (
+                <a
+                  href={macUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="library-control text-sm"
+                  title="Introducción del libro por John MacArthur (Blue Letter Bible, en inglés): autor, fecha, trasfondo y temas"
+                >
+                  Intro del libro de MacArthur (inglés) <ExternalLink size={13} />
+                </a>
+              )}
+              {crossUrl && (
+                <a
+                  href={crossUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="library-control text-sm"
+                  title="Versículos relacionados con el pasaje (BibleHub, en inglés)"
+                >
+                  Referencias cruzadas (inglés) <ExternalLink size={13} />
+                </a>
+              )}
+              <a
+                href={BIBLE_ATLAS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="library-control text-sm"
+                title="Mapas interactivos, cronologías y genealogías (Bible Atlas, en español)"
+              >
+                Atlas bíblico: mapas (español) <ExternalLink size={13} />
+              </a>
+              <a
+                href={BIBLE_HISTORY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="library-control text-sm"
+                title="Contexto histórico y cultural de la época, con mapas (Bible History, en inglés)"
+              >
+                Contexto histórico y cultura (inglés) <ExternalLink size={13} />
               </a>
             </div>
           </details>
