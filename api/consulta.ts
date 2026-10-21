@@ -63,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             parts: [{ text: `Pasaje: ${passage}\nPregunta: ${question.trim()}` }],
           },
         ],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 1500 },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
       }),
     });
     const data: any = await r.json().catch(() => ({}));
