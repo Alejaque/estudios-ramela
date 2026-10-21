@@ -6,6 +6,7 @@ import { CoverHero } from './components/CoverHero';
 import { BibleVerseModal } from './components/BibleVerseModal';
 import { PulpitModal } from './components/PulpitModal';
 import { PersonalNotes } from './components/PersonalNotes';
+import { PersonalStudy } from './components/PersonalStudy';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { exportStudyToPdf } from './utils/pdfExport';
 import type { SavedStudy } from './types';
@@ -16,7 +17,7 @@ export default function App() {
  const [dark,setDark]=useState(()=>localStorage.getItem('library_dark')==='true');
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark);},[dark]);
  const [study,setStudy]=useState<SavedStudy>(JUAN);
- const [mode,setMode]=useState<'library'|'drafts'>('library');
+ const [mode,setMode]=useState<'library'|'drafts'|'personal'>('library');
  const [drafts,setDrafts]=useState<SavedStudy[]>(()=>{try{return JSON.parse(localStorage.getItem('biblical_drafts')||'[]')}catch{return []}});
  const [draftPassage,setDraftPassage]=useState('');
  const [busy,setBusy]=useState(false);
@@ -46,8 +47,8 @@ export default function App() {
   <div className="flex items-center gap-2"><button aria-label="Cambiar tema" onClick={()=>{setDark(!dark);localStorage.setItem('library_dark',String(!dark));}} className="p-3 rounded-full border border-[#bbc9bd]">{dark?<Sun size={20}/>:<Moon size={20}/>}</button><button onClick={()=>setPulpit(true)} className="rounded-xl bg-[#315b46] text-white px-4 py-3 font-semibold flex gap-2 items-center"><Maximize2 size={18}/><span className="hidden sm:inline">Modo </span>Púlpito</button></div>
  </header>
  <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-5"><CoverHero/></div>
- <nav className="max-w-7xl mx-auto px-4 sm:px-8 pt-5 flex gap-3"><button className="library-control" aria-pressed={!isDraft} onClick={()=>{setMode('library');load(JUAN);}}>Biblioteca</button><button className="library-control" aria-pressed={isDraft} onClick={()=>{setMode('drafts');if(drafts[0])load(drafts[0]);}}>Borradores</button></nav>
- <main className="max-w-7xl mx-auto p-4 sm:p-8 grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
+ <nav className="max-w-7xl mx-auto px-4 sm:px-8 pt-5 flex gap-3"><button className="library-control" aria-pressed={mode==='library'} onClick={()=>{setMode('library');load(JUAN);}}>Biblioteca</button><button className="library-control" aria-pressed={isDraft} onClick={()=>{setMode('drafts');if(drafts[0])load(drafts[0]);}}>Borradores</button><button className="library-control" aria-pressed={mode==='personal'} onClick={()=>setMode('personal')}>Estudio personal</button></nav>
+ <main className="max-w-7xl mx-auto p-4 sm:p-8 grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">{mode==='personal'?<div className="lg:col-span-2 min-w-0"><PersonalStudy/></div>:<>
  <aside className="lg:sticky lg:top-28"><div className="flex items-center justify-between mb-4"><h2 className="font-serif text-2xl flex gap-2 items-center"><Library size={22}/> {isDraft?'Borradores':'Tus estudios'}</h2><PWAInstallButton variant="header"/></div>
  {isDraft&&<form onSubmit={generate} className="mb-5 space-y-3"><label className="block font-semibold" htmlFor="draft-passage">Nuevo borrador con IA</label><input id="draft-passage" value={draftPassage} onChange={e=>setDraftPassage(e.target.value)} placeholder="Pasaje o tema" className="library-control w-full bg-transparent" required/><button disabled={busy} className="library-control w-full">{busy?'Preparando borrador…':'Crear borrador'}</button>{draftError&&<p role="alert" className="text-sm">{draftError}</p>}</form>}
  <label className="flex gap-2 items-center rounded-xl border border-[#cbd4c9] dark:border-[#405245] p-3 mb-4"><Search size={18}/><input className="bg-transparent min-w-0 w-full outline-none text-base" value={query} onChange={e=>setQuery(e.target.value)} placeholder={isDraft?'Buscar borradores':'Buscar en la biblioteca'}/></label>
@@ -64,7 +65,7 @@ export default function App() {
  <details className="mb-5 border-y border-[#cbd4c9] dark:border-[#405245] py-3"><summary className="font-semibold cursor-pointer">Recorrido del estudio</summary><div className="flex flex-wrap gap-2 mt-3">{SECTIONS.map(s=><button key={s} onClick={()=>jump(s)} className="library-control text-sm">{s}</button>)}</div></details>
  <article id="reading" className="library-reading bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl px-5 sm:px-9 py-7 sm:py-10 shadow-sm" style={{fontSize:size,lineHeight:1.75}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{study.content}</ReactMarkdown></article>
  {notes&&<div className="mt-6"><PersonalNotes passageOrTopic={study.passageOrTopic}/></div>}
- </section>:<section className="py-10 font-serif text-2xl">Tus borradores aparecerán acá.</section>}</main>
+ </section>:<section className="py-10 font-serif text-2xl">Tus borradores aparecerán acá.</section>}</>}</main>
  {bible&&<BibleVerseModal reference={study.passageOrTopic} onClose={()=>setBible(false)}/>}
  {archive&&<div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl p-6 w-full max-w-xl max-h-[85dvh] overflow-auto"><div className="flex justify-between items-center mb-4"><h2 className="font-serif text-2xl">Guardados anteriores</h2><button aria-label="Cerrar guardados" onClick={()=>setArchive(false)} className="p-3"><X/></button></div>{previous.map(s=><button key={s.id} onClick={()=>load(s)} className="block w-full text-left p-4 border-b"><strong>{s.passageOrTopic}</strong><span className="block">{s.title}</span></button>)}</div></div>}
  <PulpitModal isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={(currentIsDraft?'# Borrador\n\n':'')+study.content}/>
