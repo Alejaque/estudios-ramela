@@ -1,18 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { HENRY_JUAN6 } from './henryJuan6.js';
 
 export const maxDuration = 60;
 
-// Asistente "Consultar sobre este pasaje" (Estudio personal).
-// Solo recibe la referencia del pasaje y la pregunta escrita por el usuario:
-// nunca sus apuntes. Clave en GEMINI_API_KEY (entorno del servidor, nunca en el cliente).
-const SYSTEM_PROMPT = `Sos una herramienta de consulta para el estudio bíblico personal de un pastor que prepara sus propios sermones expositivos. Respondés preguntas puntuales sobre UN pasaje. Reglas:
+// Asistente "Consultar sobre este pasaje" (Estudio personal) con RECUPERACIÓN REAL:
+// el servidor busca fragmentos de una fuente autorizada (dominio público verificado)
+// y el modelo responde ÚNICAMENTE con ese contexto recuperado. Las citas las adjunta
+// el servidor desde los metadatos de la fuente; el modelo no genera URLs ni lista
+// de fuentes propia. Sin fuente recuperada para el pasaje, no se consulta al modelo:
+// se reconoce el límite en vez de improvisar.
+// Clave en GEMINI_API_KEY (entorno del servidor, nunca en el cliente).
+
+const SYSTEM_PROMPT = `Sos una herramienta de consulta para el estudio bíblico personal de un pastor que prepara sus propios sermones expositivos. Recibís FRAGMENTOS RECUPERADOS de una fuente real (comentario de dominio público) y una pregunta sobre un pasaje. Reglas estrictas:
 - Respondé en español claro y breve (máximo unas 300 palabras), con tono respetuoso.
-- Citá solo fuentes reales y verificables, con referencia exacta: obra, capítulo o sección y, si corresponde, URL pública. Fuentes aceptables: el texto bíblico (Reina-Valera 1960), comentarios de dominio público (por ejemplo Matthew Henry), diccionarios bíblicos de dominio público (Easton, ISBE) y atlas bíblicos.
-- Si no podés comprobar un dato con una fuente real, decí expresamente "no puedo comprobarlo" en lugar de afirmarlo. Nunca inventes citas, vocablos griegos o hebreos, números de Strong, etimologías ni datos históricos.
-- Si traducís una fuente en inglés, aclaralo: "(fuente en inglés, traducción automática)".
-- No escribas el sermón por él: ofrecé datos, contexto y referencias para que él saque sus propias conclusiones. No des consejo pastoral sobre personas ni situaciones privadas.
+- Usá ÚNICAMENTE el contenido de los fragmentos recuperados y el texto bíblico (Reina-Valera 1960). Nada de conocimiento externo ni de otras obras.
+- Distinguí explícitamente: "**La fuente dice:**" (contenido del fragmento, traducido del inglés; marcá así: "(fuente en inglés, traducción automática)") y "**Explicación:**" (tu síntesis acotada a esos contenidos).
+- Si los fragmentos no cubren la pregunta, decilo: "La fuente recuperada no cubre esa pregunta" y no respondas con otra cosa.
+- Prohibido inventar o generar: citas, URLs, nombres de obras, vocablos griegos o hebreos, números de Strong, etimologías, datos históricos, ni la lista de fuentes (la aplicación adjunta las fuentes verificadas por separado).
 - Las citas bíblicas textuales son breves y en Reina-Valera 1960.
-- Cerrá con la lista de fuentes usadas, una por línea: "- Fuente: <obra>, <ubicación exacta> (<URL si aplica>)". Si no usaste ninguna fuente externa, escribí "- Fuente: ninguna fuente externa; respuesta sin verificación independiente".`;
+- No escribas el sermón por él; no des consejo pastoral sobre personas ni situaciones privadas.`;
 
 // Tope de cortesía por instancia de servidor. Es memoria efímera (no durable);
 // el tope durable real lo impone la cuota del nivel gratuito del proyecto en
@@ -20,6 +26,15 @@ const SYSTEM_PROMPT = `Sos una herramienta de consulta para el estudio bíblico 
 let hitsToday = 0;
 let dayStamp = '';
 const DAILY_SOFT_CAP = 30;
+
+const SIN_FUENTE =
+  'Todavía no tengo una fuente verificada recuperada para ese pasaje, así que no puedo responder con respaldo comprobable. ' +
+  'Por ahora la consulta con fuente verificada cubre Juan 6:1-27 (Comentario de Matthew Henry, dominio público). ' +
+  'Para otros pasajes, usá las herramientas de estudio enlazadas arriba.';
+
+function esJuan6(passage: string): boolean {
+  return /\bj(?:ua?)?n?\.?\s*6\b/i.test(passage) || /john\s*6/i.test(passage) || /juan\s*6/i.test(passage);
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
@@ -34,6 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (question.length > 1000) {
     return res.status(400).json({ error: 'La pregunta es demasiado larga (máximo 1000 caracteres).' });
   }
+
+  // Recuperación server-side: sin fragmentos recuperados, no hay consulta al modelo.
+  if (!esJuan6(passage)) {
+    return res.json({ answer: SIN_FUENTE, sources: [], retrieved: false });
+  }
+  const fragmentos = HENRY_JUAN6.fragmentos;
 
   const today = new Date().toISOString().slice(0, 10);
   if (dayStamp !== today) {
@@ -51,18 +72,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
+  const contexto = fragmentos
+    .map((f) => `### Fragmento ${f.id} (${f.ref} — ${f.titulo_en})\n${f.texto}`)
+    .join('\n\n');
+  const userContent = `Pasaje del usuario: ${passage}\nPregunta: ${question.trim()}\n\nFRAGMENTOS RECUPERADOS de "${HENRY_JUAN6.fuente.obra}" de ${HENRY_JUAN6.fuente.autor} (${HENRY_JUAN6.fuente.licencia}):\n\n${contexto}`;
+
   try {
     const r = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `Pasaje: ${passage}\nPregunta: ${question.trim()}` }],
-          },
-        ],
+        contents: [{ role: 'user', parts: [{ text: userContent }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
       }),
     });
@@ -77,12 +98,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .status(502)
         .json({ error: `El servicio de consulta respondió con error (${r.status}).` });
     }
-    const answer = (data?.candidates?.[0]?.content?.parts || [])
+    let answer = (data?.candidates?.[0]?.content?.parts || [])
       .map((p: any) => p.text || '')
       .join('')
       .trim();
     if (!answer) return res.status(502).json({ error: 'No se obtuvo respuesta. Probá de nuevo.' });
-    return res.json({ answer, model });
+
+    // El modelo no puede aportar URLs: se elimina cualquier enlace que haya generado.
+    // Las únicas URLs válidas son las de la fuente recuperada, adjuntadas por el servidor.
+    answer = answer.replace(/https?:\/\/\S+/g, '(enlace omitido: las fuentes verificadas figuran abajo)');
+
+    const sources = [
+      {
+        id: fragmentos.map((f) => f.id).join(', '),
+        ref: HENRY_JUAN6.cobertura,
+        obra: HENRY_JUAN6.fuente.obra,
+        autor: HENRY_JUAN6.fuente.autor,
+        licencia: HENRY_JUAN6.fuente.licencia,
+        url: HENRY_JUAN6.fuente.url,
+      },
+    ];
+    return res.json({ answer, sources, retrieved: true });
   } catch {
     return res.status(503).json({ error: 'No se pudo conectar con el servicio de consulta.' });
   }
