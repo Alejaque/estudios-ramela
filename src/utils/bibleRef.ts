@@ -65,3 +65,79 @@ export function blbUrl(ref: string): string | null {
   const b = osis.toLowerCase();
   return `https://www.blueletterbible.org/rvr60/${b}/${ch}/${v1 || '1'}/`;
 }
+
+// Slugs verificados de BibliaTodo para el comentario de Matthew Henry en espanol (RVR1960).
+const BIBLIATODO: Record<string, string> = {
+  GEN:'genesis', EXO:'exodo', LEV:'levitico', NUM:'numeros', DEU:'deuteronomio', JOS:'josue', JDG:'jueces', RUT:'rut',
+  '1SA':'1samuel', '2SA':'2samuel', '1KI':'1reyes', '2KI':'2reyes', '1CH':'1cronicas', '2CH':'2cronicas',
+  EZR:'esdras', NEH:'nehemias', EST:'ester', JOB:'job', PSA:'salmos', PRO:'proverbios', ECC:'eclesiastes', SNG:'cantares',
+  ISA:'isaias', JER:'jeremias', LAM:'lamentaciones', EZK:'ezequiel', DAN:'daniel', HOS:'oseas', JOL:'joel', AMO:'amos',
+  OBA:'abdias', JON:'jonas', MIC:'miqueas', NAM:'nahum', HAB:'habacuc', ZEP:'sofonias', HAG:'hageo', ZEC:'zacarias', MAL:'malaquias',
+  MAT:'mateo', MRK:'marcos', LUK:'lucas', JHN:'juan', ACT:'hechos', ROM:'romanos', '1CO':'1corintios', '2CO':'2corintios',
+  GAL:'galatas', EPH:'efesios', PHP:'filipenses', COL:'colosenses', '1TH':'1tesalonicenses', '2TH':'2tesalonicenses',
+  '1TI':'1timoteo', '2TI':'2timoteo', TIT:'tito', PHM:'filemon', HEB:'hebreos', JAS:'santiago',
+  '1PE':'1pedro', '2PE':'2pedro', '1JN':'1juan', '2JN':'2juan', '3JN':'3juan', JUD:'judas', REV:'apocalipsis',
+};
+
+// Slugs verificados de Blue Letter Bible para las introducciones de John MacArthur (en ingles), por libro.
+const BLB_INTRO: Record<string, string> = {
+  GEN:'genesis', EXO:'exodus', LEV:'leviticus', NUM:'numbers', DEU:'deuteronomy', JOS:'joshua', JDG:'judges', RUT:'ruth',
+  '1SA':'1samuel', '2SA':'2samuel', '1KI':'1kings', '2KI':'2kings', '1CH':'1chronicles', '2CH':'2chronicles',
+  EZR:'ezra', NEH:'nehemiah', EST:'esther', JOB:'job', PSA:'psalms', PRO:'proverbs', ECC:'ecclesiastes', SNG:'songofsongs',
+  ISA:'isaiah', JER:'jeremiah', LAM:'lamentations', EZK:'ezekiel', DAN:'daniel', HOS:'hosea', JOL:'joel', AMO:'amos',
+  OBA:'obadiah', JON:'jonah', MIC:'micah', NAM:'nahum', HAB:'habakkuk', ZEP:'zephaniah', HAG:'haggai', ZEC:'zechariah', MAL:'malachi',
+  MAT:'matthew', MRK:'mark', LUK:'luke', JHN:'john', ACT:'acts', ROM:'romans', '1CO':'1corinthians', '2CO':'2corinthians',
+  GAL:'galatians', EPH:'ephesians', PHP:'philippians', COL:'colossians', '1TH':'1thessalonians', '2TH':'2thessalonians',
+  '1TI':'1timothy', '2TI':'2timothy', TIT:'titus', PHM:'philemon', HEB:'hebrews', JAS:'james',
+  '1PE':'1peter', '2PE':'2peter', '1JN':'1john', '2JN':'2john', '3JN':'3john', JUD:'jude', REV:'revelation',
+};
+
+// Comentario de Matthew Henry en espanol (BibliaTodo, basado en RVR1960), por capitulo.
+export function matthewHenryUrl(ref: string): string | null {
+  const m = norm(ref).match(/^((?:[123] ?)?[a-z ]+?)\s*(\d+)(?::(\d+)(?:\s*-\s*(?:(\d+):)?(\d+))?)?$/);
+  if (!m) return null;
+  const book = BOOKS[m[1].replace(/^([123]) ?/, '$1 ')];
+  const slug = book && BIBLIATODO[book];
+  if (!slug) return null;
+  return `https://www.bibliatodo.com/comentario-biblico/?v=RV1960&co=matthew-henry&l=${slug}&cap=${m[2]}`;
+}
+
+// Introduccion del libro por John MacArthur (Blue Letter Bible, en ingles): autor, fecha,
+// trasfondo, temas historico-teologicos y bosquejo del libro.
+export function macarthurIntroUrl(ref: string): string | null {
+  const m = norm(ref).match(/^((?:[123] ?)?[a-z ]+?)\s*(\d+)(?::(\d+)(?:\s*-\s*(?:(\d+):)?(\d+))?)?$/);
+  if (!m) return null;
+  const book = BOOKS[m[1].replace(/^([123]) ?/, '$1 ')];
+  const slug = book && BLB_INTRO[book];
+  if (!slug) return null;
+  return `https://www.blueletterbible.org/Comm/macarthur_john/bible-introductions/${slug}-intro.cfm`;
+}
+
+// Atlas biblico interactivo en espanol (mapas, cronologias y genealogias; busqueda por lugar).
+export const BIBLE_ATLAS_URL = 'https://bible-atlas.com/es';
+
+// Contexto historico-cultural y mapas (Bible History, en ingles).
+export const BIBLE_HISTORY_URL = 'https://bible-history.com/biblemaps';
+
+// Slugs verificados de BibleHub para referencias cruzadas (en ingles), por versiculo inicial.
+const BIBLEHUB: Record<string, string> = {
+  GEN:'genesis', EXO:'exodus', LEV:'leviticus', NUM:'numbers', DEU:'deuteronomy', JOS:'joshua', JDG:'judges', RUT:'ruth',
+  '1SA':'1_samuel', '2SA':'2_samuel', '1KI':'1_kings', '2KI':'2_kings', '1CH':'1_chronicles', '2CH':'2_chronicles',
+  EZR:'ezra', NEH:'nehemiah', EST:'esther', JOB:'job', PSA:'psalms', PRO:'proverbs', ECC:'ecclesiastes', SNG:'songs',
+  ISA:'isaiah', JER:'jeremiah', LAM:'lamentations', EZK:'ezekiel', DAN:'daniel', HOS:'hosea', JOL:'joel', AMO:'amos',
+  OBA:'obadiah', JON:'jonah', MIC:'micah', NAM:'nahum', HAB:'habakkuk', ZEP:'zephaniah', HAG:'haggai', ZEC:'zechariah', MAL:'malachi',
+  MAT:'matthew', MRK:'mark', LUK:'luke', JHN:'john', ACT:'acts', ROM:'romans', '1CO':'1_corinthians', '2CO':'2_corinthians',
+  GAL:'galatians', EPH:'ephesians', PHP:'philippians', COL:'colossians', '1TH':'1_thessalonians', '2TH':'2_thessalonians',
+  '1TI':'1_timothy', '2TI':'2_timothy', TIT:'titus', PHM:'philemon', HEB:'hebrews', JAS:'james',
+  '1PE':'1_peter', '2PE':'2_peter', '1JN':'1_john', '2JN':'2_john', '3JN':'3_john', JUD:'jude', REV:'revelation',
+};
+
+// Referencias cruzadas del pasaje (BibleHub, en ingles): versiculos relacionados tematicamente.
+export function crossRefsUrl(ref: string): string | null {
+  const m = norm(ref).match(/^((?:[123] ?)?[a-z ]+?)\s*(\d+)(?::(\d+)(?:\s*-\s*(?:(\d+):)?(\d+))?)?$/);
+  if (!m) return null;
+  const book = BOOKS[m[1].replace(/^([123]) ?/, '$1 ')];
+  const slug = book && BIBLEHUB[book];
+  if (!slug) return null;
+  return `https://biblehub.com/crossref/${slug}/${m[2]}-${m[3] || '1'}.htm`;
+}
