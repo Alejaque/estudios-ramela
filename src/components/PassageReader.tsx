@@ -59,9 +59,9 @@ export const PassageReader: React.FC<PassageReaderProps> = ({ passage }) => {
     <details className="mb-6 border-b border-[#cbd4c9] dark:border-[#405245] pb-3" open>
       <summary className="font-semibold cursor-pointer">Leer el pasaje aquí</summary>
       <p className="text-sm opacity-75 mt-3 mb-3">
-        Versión: <strong>Reina-Valera 1909</strong> (dominio público). No es la RVR1960: el texto y
-        algunas palabras difieren. La RVR1960 sigue disponible en «Pasaje en RVR1960», abajo.
-        Necesita Internet.
+        Para la <strong>RVR1960</strong> usá el botón de la ventana (texto de BibleGateway). El botón
+        «Leer» muestra la <strong>Reina-Valera 1909</strong> (dominio público), que NO es la RVR1960:
+        algunas palabras difieren. Necesita Internet.
       </p>
       <button type="button" onClick={() => setOpen1960(true)} className="library-control mb-3 mr-2">
         <BookOpen size={16} /> Leer {passage} en RVR1960 (ventana)
