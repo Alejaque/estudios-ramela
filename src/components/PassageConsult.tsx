@@ -138,6 +138,7 @@ export const PassageConsult: React.FC<PassageConsultProps> = ({ passage, section
               ))}
             </div>
           )}
+          {sources.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mt-3">
             <select
               className="library-control text-sm"
@@ -156,6 +157,7 @@ export const PassageConsult: React.FC<PassageConsultProps> = ({ passage, section
             </button>
             {saved && <span className="text-sm opacity-70">Guardado ✓</span>}
           </div>
+          )}
         </div>
       )}
     </details>
