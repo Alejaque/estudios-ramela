@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PulpitModal } from './PulpitModal';
 import { PassageConsult } from './PassageConsult';
+import { PassageReader } from './PassageReader';
 import { exportStudyToPdf } from '../utils/pdfExport';
 import {
   rvr1960Url,
@@ -392,6 +393,8 @@ export const PersonalStudy: React.FC = () => {
               </p>
             )}
           </div>
+
+          <PassageReader passage={doc.passageOrTopic} />
 
           <details className="mb-6 border-y border-[#cbd4c9] dark:border-[#405245] py-3" open>
             <summary className="font-semibold cursor-pointer">Herramientas de estudio</summary>
