@@ -3,6 +3,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { MessageCircleQuestion, Save } from 'lucide-react';
 
+interface ConsultFragment {
+  id: string;
+  ref: string;
+  titulo_en: string;
+  texto: string;
+}
+
 interface ConsultSource {
   id: string;
   ref: string;
@@ -10,6 +17,7 @@ interface ConsultSource {
   autor: string;
   licencia: string;
   url: string;
+  fragmentos?: ConsultFragment[];
 }
 
 interface PassageConsultProps {
@@ -81,7 +89,7 @@ export const PassageConsult: React.FC<PassageConsultProps> = ({ passage, section
       <p className="text-sm opacity-75 mt-3 mb-3">
         La pregunta sale de este dispositivo y Google puede usarla para mejorar sus productos.
         Escribí solo preguntas generales sobre el pasaje: sin datos personales ni situaciones
-        privadas de la iglesia. Tus apuntes nunca se envían. Por ahora la consulta con fuente verificada cubre Juan 6 (Comentario de Matthew Henry, dominio público, recuperado por el servidor); para otros pasajes reconoce el límite en vez de improvisar. Comprobá siempre en la fuente enlazada. Necesita Internet.
+        privadas de la iglesia. Tus apuntes nunca se envían. Por ahora la consulta con fuente verificada tiene extractos de Juan 6 (Comentario de Matthew Henry, dominio público, recuperado por el servidor), con cobertura limitada; para otros pasajes reconoce el límite en vez de improvisar. Las afirmaciones atribuidas a la fuente llevan una cita literal en inglés que el servidor verifica contra el fragmento recuperado; la síntesis del asistente es parafraseada y NO está garantizada: comprobala contra los comprobantes y la fuente enlazada. Necesita Internet.
       </p>
       <form onSubmit={ask} className="space-y-2">
         <textarea
@@ -109,12 +117,24 @@ export const PassageConsult: React.FC<PassageConsultProps> = ({ passage, section
             <div className="mt-2 rounded-2xl border border-[#cbd4c9] dark:border-[#405245] px-5 py-3 text-sm">
               <p className="font-semibold mb-1">Fuente recuperada por el servidor (verificada):</p>
               {sources.map((f) => (
-                <p key={f.id} className="opacity-80">
-                  {f.obra}, {f.autor}. Cobertura: {f.ref}. {f.licencia}.{' '}
-                  <a href={f.url} target="_blank" rel="noreferrer" className="underline">
-                    Ver la fuente
-                  </a>
-                </p>
+                <div key={f.id}>
+                  <p className="opacity-80">
+                    {f.obra}, {f.autor}. {f.ref}. {f.licencia}.{' '}
+                    <a href={f.url} target="_blank" rel="noreferrer" className="underline">
+                      Ver la fuente
+                    </a>
+                  </p>
+                  {(f.fragmentos || []).map((frag) => (
+                    <details key={frag.id} className="mt-1 opacity-80">
+                      <summary className="cursor-pointer">
+                        Fragmento recuperado [{frag.id}] — {frag.ref} ({frag.titulo_en})
+                      </summary>
+                      <p className="mt-1 whitespace-pre-wrap text-xs max-h-48 overflow-y-auto">
+                        {frag.texto}
+                      </p>
+                    </details>
+                  ))}
+                </div>
               ))}
             </div>
           )}
