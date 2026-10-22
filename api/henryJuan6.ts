@@ -8,7 +8,7 @@ export const HENRY_JUAN6 = {
     "url": "https://www.biblestudytools.com/commentaries/matthew-henry-complete/john/6.html",
     "idioma_original": "inglés"
   },
-  "cobertura": "Juan 6:1-27 (completo); 6:28-29 (parcial); 6:30-71 sin cobertura",
+  "cobertura": "Extractos disponibles (cobertura limitada): Juan 6:1-27; 6:28-29 (parcial); 6:30-71 sin cobertura",
   "fragmentos": [
     {
       "id": "henry-jn6-1-14",
