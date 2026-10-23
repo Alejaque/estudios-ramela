@@ -185,8 +185,11 @@ export function buildPulpitSummary(content: string): PulpitSummary | null {
     const longest = conclParagraphs.reduce((a, b) => (b.length > a.length ? b : a));
     summary.conclusion = keySentences(stripMd(longest), 200);
     // Llamado: cierre del último párrafo de la sección, donde queda el
-    // llamado cuando la conclusión tiene varios párrafos.
-    summary.call = lastSentences(stripMd(conclParagraphs[conclParagraphs.length - 1]), 2);
+    // llamado cuando la conclusión tiene varios párrafos. Si ese párrafo es
+    // corto, se muestra entero para que el llamado quede autocontenido (con
+    // la consigna); si es largo, se conservan las 2 oraciones finales.
+    const lastConcl = stripMd(conclParagraphs[conclParagraphs.length - 1]);
+    summary.call = lastConcl.length <= 400 ? lastConcl : lastSentences(lastConcl, 2);
   }
 
   if (praySec && praySec.paragraphs.length > 0) {
