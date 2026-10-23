@@ -176,10 +176,17 @@ export function buildPulpitSummary(content: string): PulpitSummary | null {
     };
   });
 
-  const conclParagraph = firstPlainParagraph(conclSec);
-  if (conclParagraph) {
-    summary.conclusion = keySentences(stripMd(conclParagraph), 200);
-    summary.call = lastSentences(stripMd(conclParagraph), 2);
+  const conclParagraphs = (conclSec?.paragraphs ?? []).filter(
+    (p) => !p.startsWith('\u00ab') && !p.startsWith('"') && !p.startsWith('\u201c'),
+  );
+  if (conclParagraphs.length > 0) {
+    // Conclusión: el párrafo más sustancioso de la sección (cuando hay
+    // varios, el primero suele ser sólo el puntapié del repaso).
+    const longest = conclParagraphs.reduce((a, b) => (b.length > a.length ? b : a));
+    summary.conclusion = keySentences(stripMd(longest), 200);
+    // Llamado: cierre del último párrafo de la sección, donde queda el
+    // llamado cuando la conclusión tiene varios párrafos.
+    summary.call = lastSentences(stripMd(conclParagraphs[conclParagraphs.length - 1]), 2);
   }
 
   if (praySec && praySec.paragraphs.length > 0) {
