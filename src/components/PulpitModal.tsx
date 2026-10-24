@@ -622,22 +622,22 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             <button
               onClick={() => setFontSize((s) => Math.max(16, s - 2))}
               title="Reducir letra"
-              className="p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
+              className="min-w-[52px] min-h-[48px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
             >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <ZoomOut className="w-6 h-6" />
             </button>
-            <span className="px-1.5 text-[11px] font-mono">{fontSize}px</span>
+            <span className="px-2 text-sm font-mono">{fontSize}px</span>
             <button
               onClick={() => setFontSize((s) => Math.min(36, s + 2))}
               title="Aumentar letra"
-              className="p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
+              className="min-w-[52px] min-h-[48px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
             >
-              <ZoomIn className="w-3.5 h-3.5" />
+              <ZoomIn className="w-6 h-6" />
             </button>
           </div>
 
           {/* Theme Selector: con etiqueta de texto para que "volver a oscuro" sea obvio */}
-          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 p-0.5 text-[11px] font-semibold" role="group" aria-label="Tema del púlpito">
+          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 p-0.5 text-sm font-semibold" role="group" aria-label="Tema del púlpito">
             {([
               ['dark-oled', '🌙 Oscuro', 'Tema oscuro'],
               ['sepia', '📜 Sepia', 'Tema sepia'],
@@ -649,7 +649,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
                 onClick={() => setTheme(value)}
                 title={title}
                 aria-pressed={theme === value}
-                className={`px-2.5 min-h-[40px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
+                className={`px-4 min-h-[48px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
                   theme === value ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -697,13 +697,13 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       </div>
 
       {/* Vista del estudio + Quick Outline Jump Bar */}
-      <div className="pulpit-jumps px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs font-sans no-print">
+      <div className="pulpit-jumps px-4 sm:px-8 py-2 bg-black/30 border-b border-white/5 flex flex-wrap items-center gap-2 text-base font-sans no-print">
         <div className="flex items-center rounded-lg bg-white/10 p-0.5 shrink-0 mr-1" role="group" aria-label="Vista del estudio">
           <button
             type="button"
             onClick={() => setViewMode('full')}
             aria-pressed={viewMode === 'full'}
-            className={`px-3 py-2 rounded-md cursor-pointer whitespace-nowrap transition-colors ${
+            className={`px-4 min-h-[48px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
               viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -714,7 +714,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             onClick={() => setViewMode('summary')}
             aria-pressed={viewMode === 'summary'}
             title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
-            className={`px-3 py-2 rounded-md cursor-pointer whitespace-nowrap transition-colors ${
+            className={`px-4 min-h-[48px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
               viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -729,7 +729,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </span>
         {[
           ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
-        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
+        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-4 min-h-[48px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
         {personalNote && (
           <button
             type="button"
@@ -744,7 +744,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           onClick={() => setHighlightIdeas(!highlightIdeas)}
           aria-pressed={highlightIdeas}
           title="Resaltar en negrita las ideas principales de cada sección"
-          className={`px-3 py-2 rounded-lg shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
+          className={`px-4 min-h-[48px] rounded-lg shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
             highlightIdeas ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
           }`}
         >
