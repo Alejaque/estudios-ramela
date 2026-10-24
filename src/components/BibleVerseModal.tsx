@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {createPortal} from 'react-dom';
 import {X, Copy, Check, ExternalLink} from 'lucide-react';
 import {useModalBackButton} from '../hooks/useModalBackButton';
@@ -14,6 +14,18 @@ export const BibleVerseModal:React.FC<{reference:string;onClose:()=>void}>=({ref
  const match=normalized.match(/^juan 6:(\d+)(?:-(\d+))?$/);
  let text=EXTRA[normalized]||'';
  if(match){const first=Number(match[1]),last=Number(match[2]||match[1]);if(first>=1&&last<=15&&last>=first)text=Array.from({length:last-first+1},(_,i)=>`${first+i} ${JUAN_VERSES[String(first+i)]}`).join('\n\n');}
+ const [pd,setPd]=useState<{text:string;copyright:string}|null>(null);
+ const [state,setState]=useState<'idle'|'loading'|'error'>('idle');
+ const cacheKey='bible1909_'+normalized;
+ useEffect(()=>{
+  if(text)return;
+  try{const c=localStorage.getItem(cacheKey);if(c){setPd(JSON.parse(c));return;}}catch{/* sin cache */}
+  let alive=true;setState('loading');
+  fetch('/api/bible?version=rvr60&ref='+encodeURIComponent(reference.trim())).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(!alive)return;if(!d.text)throw Error();const v={text:d.text as string,copyright:String(d.copyright||'Reina-Valera 1909 - Dominio público.')};setPd(v);try{localStorage.setItem(cacheKey,JSON.stringify(v));}catch{/* lleno */}}).catch(()=>{if(alive)setState('error');});
+  return()=>{alive=false;};
+ },[text,cacheKey,reference]);
+ const pdText=pd?pd.text.split('\n').map(l=>l.trim().replace(/^\[(\d+)\]\s*/,'$1 ')).filter(Boolean).join('\n\n'):'';
+ const is1909=!text&&!!pd;
  const url='https://www.biblegateway.com/passage/?search='+encodeURIComponent(reference)+'&version=RVR1960';
- return createPortal(<div className="fixed inset-0 z-[100] bg-black/65 flex items-center justify-center p-3" onClick={onClose}><div role="dialog" aria-modal="true" aria-label={reference} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Escape')onClose();}} className="bg-[#fffdf8] text-[#24352c] w-full max-w-2xl max-h-[90dvh] rounded-2xl flex flex-col overflow-hidden"><div className="p-5 border-b flex justify-between items-center"><div><h2 className="text-xl font-bold">{reference}</h2><p className="text-sm">Reina-Valera 1960</p></div><button aria-label="Cerrar Biblia" onClick={onClose} className="p-3"><X/></button></div><div className="overflow-auto p-6 text-[22px] leading-[1.8] whitespace-pre-line font-serif">{text||'Abrí este pasaje en RVR1960 desde la fuente.'}{text&&<p className="text-xs leading-normal mt-6 font-sans">Reina-Valera 1960 ® © Sociedades Bíblicas en América Latina, 1960. Renovado © Sociedades Bíblicas Unidas, 1988.</p>}</div><div className="p-4 border-t flex flex-wrap gap-3">{text&&<button className="library-control" onClick={()=>{navigator.clipboard.writeText(text+'\n'+reference+' (RVR1960)');setCopied(true);}}>{copied?<Check size={18}/>:<Copy size={18}/>} Copiar</button>}<a href={url} target="_blank" rel="noreferrer" className="library-control"><ExternalLink size={18}/> Ver en RVR1960</a></div></div></div>,document.body);
+ return createPortal(<div className="fixed inset-0 z-[100] bg-black/65 flex items-center justify-center p-3" onClick={onClose}><div role="dialog" aria-modal="true" aria-label={reference} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Escape')onClose();}} className="bg-[#fffdf8] text-[#24352c] w-full max-w-2xl max-h-[90dvh] rounded-2xl flex flex-col overflow-hidden"><div className="p-5 border-b flex justify-between items-center"><div><h2 className="text-xl font-bold">{reference}</h2><p className="text-sm">{is1909?'Reina-Valera 1909 (dominio público)':'Reina-Valera 1960'}</p></div><button aria-label="Cerrar Biblia" onClick={onClose} className="p-3"><X/></button></div><div className="overflow-auto p-6 text-[22px] leading-[1.8] whitespace-pre-line font-serif">{text||(is1909?<>{pdText}<span className="block text-base leading-snug mt-6 font-sans rounded-xl bg-[#f1e7c8] p-4">Este texto es la Reina-Valera 1909, no la RVR1960 de tus estudios; algunas palabras cambian. Para leer la RVR1960 usá el botón de abajo (se abre fuera de la app).</span><span className="block text-xs leading-normal mt-4 font-sans">{pd?.copyright}</span></>:state==='loading'?'Cargando el pasaje…':'No pude cargar el texto dentro de la app (sin conexión o pasaje no reconocido). Podés abrir la RVR1960 con el botón de abajo.')}{text&&<p className="text-xs leading-normal mt-6 font-sans">Reina-Valera 1960 ® © Sociedades Bíblicas en América Latina, 1960. Renovado © Sociedades Bíblicas Unidas, 1988.</p>}</div><div className="p-4 border-t flex flex-wrap gap-3">{text&&<button className="library-control" onClick={()=>{navigator.clipboard.writeText(text+'\n'+reference+' (RVR1960)');setCopied(true);}}>{copied?<Check size={18}/>:<Copy size={18}/>} Copiar</button>}<a href={url} target="_blank" rel="noreferrer" className="library-control"><ExternalLink size={18}/> Ver en RVR1960</a></div></div></div>,document.body);
 };
