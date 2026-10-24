@@ -353,6 +353,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
   // Bosquejo con la Oración de Transición y Vista Previa tras la Gran Idea.
   const displayContent = ensureOutlineTransition(content);
+  // El salto «Contexto» solo se ofrece cuando el estudio tiene esa sección;
+  // en estudios sin contexto (p. ej. Juan 6) el boton quedaria inerte.
+  const hasContextoSection = /(^|\n)#{1,6}\s+[^\n]*contexto/i.test(displayContent);
   const readingContent = highlightIdeas ? highlightKeyIdeas(displayContent) : displayContent;
   const pulpitSummary = viewMode === 'summary' ? buildPulpitSummary(displayContent) : null;
 
@@ -764,6 +767,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         {moreOpen && (
         <>
         {[
+          ...(hasContextoSection ? [['Contexto','Contexto'] as [string,string]] : []),
           ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
         ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
         {personalNote && (
