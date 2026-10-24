@@ -764,7 +764,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         {moreOpen && (
         <>
         {[
-          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
+          ['Contexto','Contexto'],['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
         ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
         {personalNote && (
           <button
