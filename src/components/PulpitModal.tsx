@@ -17,6 +17,8 @@ import {
   FileDown,
   Palette,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Bold,
   ArrowLeft,
   Timer,
@@ -87,6 +89,18 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     try { return localStorage.getItem('pulpit_highlight') !== '0'; } catch { return true; }
   });
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  // Botonera compacta: los saltos y opciones extra quedan plegados por defecto
+  // en pantallas chicas para dejar lugar al texto; la eleccion se recuerda.
+  const [moreOpen, setMoreOpen] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('pulpit_jumps_open');
+      if (saved === '1') return true;
+      if (saved === '0') return false;
+    } catch {
+      // Sin storage disponible: usa el ancho de pantalla.
+    }
+    return typeof window !== 'undefined' ? window.innerWidth >= 1280 : false;
+  });
   const [personalNote, setPersonalNote] = useState<string>('');
   const [verseRef, setVerseRef] = useState<string | null>(null);
 
@@ -214,6 +228,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   useEffect(() => {
     try { localStorage.setItem('pulpit_highlight', highlightIdeas ? '1' : '0'); } catch { /* sin storage */ }
   }, [highlightIdeas]);
+  useEffect(() => {
+    try { localStorage.setItem('pulpit_jumps_open', moreOpen ? '1' : '0'); } catch { /* sin storage */ }
+  }, [moreOpen]);
 
   const handleTimerPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || timerDragRef.current) return;
@@ -512,7 +529,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
       {/* Top Preaching Control Bar */}
       <div
-        className={`px-4 sm:px-6 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 no-print shadow-md ${headerThemeClasses} font-sans`}
+        className={`px-4 sm:px-6 py-1.5 border-b flex flex-wrap items-center justify-between gap-2 no-print shadow-md ${headerThemeClasses} font-sans`}
       >
         {/* Volver a Estudio (bien visible, arriba a la izquierda) */}
         <button
@@ -520,7 +537,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           onClick={onClose}
           title="Volver al modo estudio"
           aria-label="Volver a Estudio"
-          className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-extrabold shadow-md transition-colors cursor-pointer"
+          className="shrink-0 inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-extrabold shadow-md transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5 shrink-0" />
           <span>← Volver a Estudio</span>
@@ -528,7 +545,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
         {/* Title and Clock */}
         <div className="flex items-center gap-3 min-w-0">
-          <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+          <span className="hidden lg:inline-block text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
             Atril / Púlpito
           </span>
           <h2 className="text-sm sm:text-base font-bold truncate max-w-xs sm:max-w-md font-theology-serif">
@@ -622,17 +639,17 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             <button
               onClick={() => setFontSize((s) => Math.max(16, s - 2))}
               title="Reducir letra"
-              className="min-w-[52px] min-h-[48px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+              className="min-w-[44px] min-h-[40px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
             >
-              <ZoomOut className="w-6 h-6" />
+              <ZoomOut className="w-5 h-5" />
             </button>
             <span className="px-2 text-sm font-mono">{fontSize}px</span>
             <button
               onClick={() => setFontSize((s) => Math.min(36, s + 2))}
               title="Aumentar letra"
-              className="min-w-[52px] min-h-[48px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+              className="min-w-[44px] min-h-[40px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
             >
-              <ZoomIn className="w-6 h-6" />
+              <ZoomIn className="w-5 h-5" />
             </button>
           </div>
 
@@ -649,7 +666,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
                 onClick={() => setTheme(value)}
                 title={title}
                 aria-pressed={theme === value}
-                className={`px-4 min-h-[48px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
+                className={`px-3 min-h-[40px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
                   theme === value ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -657,33 +674,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               </button>
             ))}
           </div>
-
-          {/* Fullscreen */}
-          <button
-            onClick={toggleFullscreen}
-            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa para el atril'}
-            className="p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-          </button>
-
-          {/* PDF */}
-          <button
-            onClick={handleExportPdf}
-            title="Exportar a PDF"
-            className="p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
-          >
-            <FileDown className="w-4 h-4 text-blue-400" />
-          </button>
-
-          {/* Print */}
-          <button
-            onClick={handlePrint}
-            title="Imprimir hoja para el púlpito"
-            className="p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
 
           {/* Close */}
           <button
@@ -697,13 +687,13 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       </div>
 
       {/* Vista del estudio + Quick Outline Jump Bar */}
-      <div className="pulpit-jumps px-4 sm:px-8 py-2 bg-black/30 border-b border-white/5 flex flex-wrap items-center gap-2 text-base font-sans no-print">
+      <div className="pulpit-jumps px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex flex-wrap items-center gap-1.5 text-base font-sans no-print">
         <div className="flex items-center rounded-lg bg-white/10 p-0.5 shrink-0 mr-1" role="group" aria-label="Vista del estudio">
           <button
             type="button"
             onClick={() => setViewMode('full')}
             aria-pressed={viewMode === 'full'}
-            className={`px-4 min-h-[48px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
+            className={`px-3.5 min-h-[40px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
               viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -714,7 +704,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             onClick={() => setViewMode('summary')}
             aria-pressed={viewMode === 'summary'}
             title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
-            className={`px-4 min-h-[48px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
+            className={`px-3.5 min-h-[40px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
               viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -723,34 +713,73 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         </div>
         {viewMode === 'full' && (
         <>
-        <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
-          <Compass className="w-3.5 h-3.5 text-amber-400" />
-          Salto rápido:
-        </span>
-        {[
-          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
-        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-4 min-h-[48px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
-        {personalNote && (
-          <button
-            type="button"
-            onClick={() => scrollToHeading('Notas y Reflexiones')}
-            className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
-          >
-            ✍️ Mis Notas
-          </button>
-        )}
         <button
           type="button"
           onClick={() => setHighlightIdeas(!highlightIdeas)}
           aria-pressed={highlightIdeas}
           title="Resaltar en negrita las ideas principales de cada sección"
-          className={`px-4 min-h-[48px] rounded-lg shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
             highlightIdeas ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
           }`}
         >
           <Bold className="w-3.5 h-3.5" />
           Ideas
         </button>
+        <button
+          type="button"
+          onClick={() => setMoreOpen(!moreOpen)}
+          aria-expanded={moreOpen}
+          title={moreOpen ? 'Ocultar saltos y opciones' : 'Mostrar saltos a cada sección y más opciones'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1.5 font-semibold transition-colors ${
+            moreOpen ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          <Compass className="w-4 h-4 text-amber-400" />
+          Saltos
+          {moreOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {moreOpen && (
+        <>
+        {[
+          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
+        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
+        {personalNote && (
+          <button
+            type="button"
+            onClick={() => scrollToHeading('Notas y Reflexiones')}
+            className="px-3 min-h-[40px] rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
+          >
+            ✍️ Mis Notas
+          </button>
+        )}
+        <span className="flex items-center gap-1.5 ml-auto">
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa para el atril'}
+            className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            title="Exportar a PDF"
+            className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer hidden sm:block"
+          >
+            <FileDown className="w-4 h-4 text-blue-400" />
+          </button>
+          <button
+            type="button"
+            onClick={handlePrint}
+            title="Imprimir hoja para el púlpito"
+            className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer hidden sm:block"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+        </span>
+        </>
+        )}
         </>
         )}
       </div>
