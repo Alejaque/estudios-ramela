@@ -4,8 +4,6 @@ import remarkGfm from 'remark-gfm';
 import {
   X,
   Printer,
-  ZoomIn,
-  ZoomOut,
   Maximize,
   Minimize,
   Play,
@@ -20,7 +18,6 @@ import {
   ChevronDown,
   ChevronUp,
   Bold,
-  ArrowLeft,
   Timer,
   Maximize2,
   Minimize2,
@@ -101,6 +98,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     }
     return typeof window !== 'undefined' ? window.innerWidth >= 1280 : false;
   });
+  // Desplegables Vista y Tema: transitorios, se cierran al elegir una opcion.
+  const [vistaOpen, setVistaOpen] = useState<boolean>(false);
+  const [temaOpen, setTemaOpen] = useState<boolean>(false);
   const [personalNote, setPersonalNote] = useState<string>('');
   const [verseRef, setVerseRef] = useState<string | null>(null);
 
@@ -529,20 +529,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
       {/* Top Preaching Control Bar */}
       <div
-        className={`px-4 sm:px-6 py-1.5 border-b flex flex-wrap items-center justify-between gap-2 no-print shadow-md ${headerThemeClasses} font-sans`}
+        className={`px-4 sm:px-6 py-1 border-b flex flex-wrap items-center justify-between gap-2 no-print shadow-md ${headerThemeClasses} font-sans`}
       >
-        {/* Volver a Estudio (bien visible, arriba a la izquierda) */}
-        <button
-          type="button"
-          onClick={onClose}
-          title="Volver al modo estudio"
-          aria-label="Volver a Estudio"
-          className="shrink-0 inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-extrabold shadow-md transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5 shrink-0" />
-          <span>← Volver a Estudio</span>
-        </button>
-
         {/* Title and Clock */}
         <div className="flex items-center gap-3 min-w-0">
           <span className="hidden lg:inline-block text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
@@ -634,51 +622,22 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             )}
           </div>
 
-          {/* Font Size */}
-          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 overflow-hidden text-xs">
-            <button
-              onClick={() => setFontSize((s) => Math.max(16, s - 2))}
-              title="Reducir letra"
-              className="min-w-[44px] min-h-[40px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <ZoomOut className="w-5 h-5" />
-            </button>
-            <span className="px-2 text-sm font-mono">{fontSize}px</span>
-            <button
-              onClick={() => setFontSize((s) => Math.min(36, s + 2))}
-              title="Aumentar letra"
-              className="min-w-[44px] min-h-[40px] flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <ZoomIn className="w-5 h-5" />
-            </button>
-          </div>
+          {/* Pantalla completa: a mano, junto a la X */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa para el atril'}
+            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
 
-          {/* Theme Selector: con etiqueta de texto para que "volver a oscuro" sea obvio */}
-          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 p-0.5 text-sm font-semibold" role="group" aria-label="Tema del púlpito">
-            {([
-              ['dark-oled', '🌙 Oscuro', 'Tema oscuro'],
-              ['sepia', '📜 Sepia', 'Tema sepia'],
-              ['light', '☀️ Claro', 'Tema claro'],
-            ] as Array<[PulpitTheme, string, string]>).map(([value, label, title]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setTheme(value)}
-                title={title}
-                aria-pressed={theme === value}
-                className={`px-3 min-h-[40px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
-                  theme === value ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Close */}
+          {/* Cerrar: unico boton para salir del modo pulpit */}
           <button
             onClick={onClose}
             title="Cerrar modo púlpito"
+            aria-label="Cerrar modo púlpito"
             className="p-2 rounded-xl bg-red-600/80 hover:bg-red-600 text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -687,30 +646,94 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       </div>
 
       {/* Vista del estudio + Quick Outline Jump Bar */}
-      <div className="pulpit-jumps px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex flex-wrap items-center gap-1.5 text-base font-sans no-print">
-        <div className="flex items-center rounded-lg bg-white/10 p-0.5 shrink-0 mr-1" role="group" aria-label="Vista del estudio">
+      <div className="pulpit-jumps px-4 sm:px-8 py-1 bg-black/30 border-b border-white/5 flex flex-wrap items-center gap-1.5 text-base font-sans no-print">
+        {/* Desplegable Letra: tamano numerico del estudio */}
+        <span className="flex items-center gap-1.5 px-3 min-h-[40px] rounded-md bg-white/5 text-slate-300 shrink-0" title="Tamaño de letra del estudio">
+          <span className="text-sm font-semibold">Letra</span>
+          <select
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
+            aria-label="Tamaño de letra del estudio"
+            className="bg-transparent text-sm font-bold text-white outline-none cursor-pointer"
+          >
+            {[16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36].map((n) => (
+              <option key={n} value={n} className="bg-slate-900 text-white">{n}</option>
+            ))}
+          </select>
+        </span>
+        {/* Desplegable Tema: Oscuro / Sepia / Claro */}
+        <button
+          type="button"
+          onClick={() => { setTemaOpen(!temaOpen); setVistaOpen(false); }}
+          aria-expanded={temaOpen}
+          title={temaOpen ? 'Ocultar opciones de tema' : 'Elegir tema Oscuro, Sepia o Claro'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1.5 font-semibold transition-colors ${
+            temaOpen ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          Tema
+          {temaOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {temaOpen && (
+        <>
+        {([
+          ['dark-oled', '🌙 Oscuro', 'Tema oscuro'],
+          ['sepia', '📜 Sepia', 'Tema sepia'],
+          ['light', '☀️ Claro', 'Tema claro'],
+        ] as Array<[PulpitTheme, string, string]>).map(([value, label, title]) => (
           <button
+            key={value}
             type="button"
-            onClick={() => setViewMode('full')}
-            aria-pressed={viewMode === 'full'}
-            className={`px-3.5 min-h-[40px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
-              viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
+            onClick={() => { setTheme(value); setTemaOpen(false); }}
+            title={title}
+            aria-pressed={theme === value}
+            className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer whitespace-nowrap transition-colors ${
+              theme === value ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
             }`}
           >
-            Completo
+            {label}
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('summary')}
-            aria-pressed={viewMode === 'summary'}
-            title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
-            className={`px-3.5 min-h-[40px] rounded-md cursor-pointer whitespace-nowrap transition-colors ${
-              viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            ⚡ Resumen
-          </button>
-        </div>
+        ))}
+        </>
+        )}
+        {/* Desplegable Vista: Completo / Resumen */}
+        <button
+          type="button"
+          onClick={() => { setVistaOpen(!vistaOpen); setTemaOpen(false); }}
+          aria-expanded={vistaOpen}
+          title={vistaOpen ? 'Ocultar opciones de vista' : 'Elegir vista Completo o Resumen'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1.5 font-semibold transition-colors ${
+            vistaOpen ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          Vista
+          {vistaOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {vistaOpen && (
+        <>
+        <button
+          type="button"
+          onClick={() => { setViewMode('full'); setVistaOpen(false); }}
+          aria-pressed={viewMode === 'full'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer whitespace-nowrap transition-colors ${
+            viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          Completo
+        </button>
+        <button
+          type="button"
+          onClick={() => { setViewMode('summary'); setVistaOpen(false); }}
+          aria-pressed={viewMode === 'summary'}
+          title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer whitespace-nowrap transition-colors ${
+            viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          ⚡ Resumen
+        </button>
+        </>
+        )}
         {viewMode === 'full' && (
         <>
         <button
@@ -755,14 +778,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         <span className="flex items-center gap-1.5 ml-auto">
           <button
             type="button"
-            onClick={toggleFullscreen}
-            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa para el atril'}
-            className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-          </button>
-          <button
-            type="button"
             onClick={handleExportPdf}
             title="Exportar a PDF"
             className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer hidden sm:block"
@@ -787,11 +802,11 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       {/* Main Preaching Content */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-5 sm:px-12 md:px-20 lg:px-32 pt-10 pb-44"
+        className="flex-1 overflow-y-auto px-5 sm:px-12 md:px-20 lg:px-32 pt-3 pb-44"
       >
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
-          <div className="border-b pb-4 mb-6 border-white/10">
+          <div className="border-b pb-3 mb-4 border-white/10">
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-theology-serif tracking-tight mb-2 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setVerseRef(passageOrTopic.trim())}
