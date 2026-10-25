@@ -1,3 +1,4 @@
+import { referenceLinks, bibleUrlTransform } from '../utils/bibleReferences';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -504,22 +505,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     scrollToHeading(`Punto ${numeral}`);
   };
 
-  const BoldAsVerse = ({ children }: { children?: React.ReactNode }) => {
-    const text = String(children ?? '');
-    const verseRegex = /^([1-3]?\s?[A-Za-záéíóúüñÁÉÍÓÚÜÑ]+\.?\s\d+[:\d,\-\s]*)/;
-    if (verseRegex.test(text.trim())) {
-      return (
-        <strong
-          className="cursor-pointer underline decoration-dotted text-blue-400 hover:text-blue-300 transition-colors"
-          onClick={() => setVerseRef(text.trim())}
-          title="Tocar para leer el pasaje"
-        >
-          {children}
-        </strong>
-      );
-    }
-    return <strong className="font-bold">{children}</strong>;
-  };
 
   return (
     <div data-pulpit-theme={theme} className={`pulpit-view fixed inset-0 w-screen h-dvh z-50 flex flex-col font-theology-serif select-none ${themeClasses}`}>
@@ -832,7 +817,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           >
             {viewMode === 'summary' ? (
               pulpitSummary ? (
-                <PulpitSummaryView summary={pulpitSummary} />
+                <PulpitSummaryView summary={pulpitSummary} context={passageOrTopic} onReference={setVerseRef} />
               ) : (
                 <p>
                   Este estudio todavía no tiene una estructura que el resumen pueda
@@ -842,8 +827,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               )
             ) : (
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{ strong: BoldAsVerse }}
+                remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                urlTransform={bibleUrlTransform}
+                components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
               >
                 {readingContent}
               </ReactMarkdown>
@@ -1087,7 +1073,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
  * Todo el texto viene del estudio cargado (ver buildPulpitSummary); no se
  * genera contenido nuevo.
  */
-const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').PulpitSummary }> = ({ summary }) => {
+const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').PulpitSummary; context:string; onReference:(ref:string)=>void }> = ({ summary,context,onReference }) => {
+  const linked=(text:string|undefined)=><ReactMarkdown remarkPlugins={[remarkGfm,referenceLinks(context)]} urlTransform={bibleUrlTransform} components={{p:({children})=><span>{children}</span>,a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted underline-offset-4" onClick={()=>onReference(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{text||''}</ReactMarkdown>;
   const applications = summary.points.filter((point) => point.application);
   return (
     <div className="pulpit-summary space-y-7">
@@ -1099,7 +1086,7 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
         <section>
           <h2>Punto principal</h2>
           <p>
-            <strong>{summary.proposition}.</strong>
+            <strong>{linked(summary.proposition)}.</strong>
           </p>
         </section>
       )}
@@ -1107,8 +1094,8 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
         <section className="space-y-5">
           {summary.points.map((point) => (
             <div key={point.numeral}>
-              <h3>{point.title}</h3>
-              {point.explanation && <p>{point.explanation}</p>}
+              <h3>{linked(point.title)}</h3>
+              {point.explanation && <p>{linked(point.explanation)}</p>}
             </div>
           ))}
         </section>
@@ -1118,7 +1105,7 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
           <h2>Aplicación práctica</h2>
           <ul>
             {applications.map((point) => (
-              <li key={point.numeral}>{point.application}</li>
+              <li key={point.numeral}>{linked(point.application)}</li>
             ))}
           </ul>
         </section>
@@ -1126,14 +1113,14 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
       {summary.conclusion && (
         <section>
           <h2>Conclusión</h2>
-          <p>{summary.conclusion}</p>
+          <p>{linked(summary.conclusion)}</p>
         </section>
       )}
       {summary.call && (
         <section>
           <h2>Llamado a la acción</h2>
           <p>
-            <strong>{summary.call}</strong>
+            <strong>{linked(summary.call)}</strong>
           </p>
         </section>
       )}
@@ -1141,7 +1128,7 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
         <section>
           <h2>Oración</h2>
           {summary.prayer.split('\n\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+            <p key={index}>{linked(paragraph)}</p>
           ))}
         </section>
       )}
