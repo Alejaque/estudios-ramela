@@ -64,6 +64,7 @@ function devApiPlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
+    base:'/estudios-ramela/',
     plugins: [
       react(),
       tailwindcss(),
@@ -72,7 +73,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'portada-alejandro-ramela.jpg'],
         manifest: {
-          id: '/',
+          id: '/estudios-ramela/',
           name: 'Estudios Alejandro Ramela',
           short_name: 'AlejandroRam',
           description: 'Plataforma de exégesis bíblica histórico-gramatical y bosquejos homiléticos expositivos por Alejandro Ramela.',
@@ -80,23 +81,23 @@ export default defineConfig(() => {
           background_color: '#0f172a',
           display: 'standalone',
           orientation: 'portrait-primary',
-          start_url: '/',
-          scope: '/',
+          start_url: '/estudios-ramela/',
+          scope: '/estudios-ramela/',
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: '/estudios-ramela/pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: '/estudios-ramela/pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-maskable-512x512.png',
+              src: '/estudios-ramela/pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
