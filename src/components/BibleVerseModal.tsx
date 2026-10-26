@@ -36,6 +36,8 @@ export const BibleVerseModal:React.FC<{reference:string;onClose:()=>void}>=({ref
     B.version='RVR1960';
     B.clickTooltip=true;
     B.linkVerses();
+    // La herramienta etiqueta toda la pagina por diseno: se restaura el texto plano fuera de esta ventana para no alterar el comportamiento RV1909 existente.
+    document.querySelectorAll('a.bibleref').forEach(a=>{if(!refBox.current?.contains(a)){a.replaceWith(document.createTextNode(a.textContent||''));}});
     clearTimeout(t);
     if(cancel)return;
     setEstado('listo');
@@ -48,10 +50,7 @@ export const BibleVerseModal:React.FC<{reference:string;onClose:()=>void}>=({ref
  <div ref={refBox} className="p-6 flex-1 overflow-auto">
  {estado==='cargando'&&<p className="text-sm">Cargando RVR1960 con la herramienta oficial de BibleGateway… necesita Internet.</p>}
  {estado==='fallo'&&<div className="text-sm"><p>No se pudo cargar la versión en línea. Revisá tu conexión a Internet y reintentá. El texto sin conexión sigue disponible volviendo atrás.</p><button className="library-control mt-3" onClick={()=>setIntento(i=>i+1)}>Reintentar</button></div>}
- {estado==='listo'&&<>
-  <p className="text-xl font-bold underline decoration-2 underline-offset-4">{reference}</p>
-  <p className="text-sm mt-3">Tocá la referencia para volver a mostrar el texto. Los pasajes largos muestran el comienzo y siguen con el enlace a BibleGateway.</p>
- </>}
+ <div style={estado==='listo'?undefined:{display:'none'}} dangerouslySetInnerHTML={{__html:'<p class="text-xl font-bold underline decoration-2 underline-offset-4">'+reference+'</p><p class="text-sm mt-3">Tocá la referencia para volver a mostrar el texto. Los pasajes largos muestran el comienzo y siguen con el enlace a BibleGateway.</p>'}}/>
  </div>
  <div className="px-4 py-2 border-t flex flex-wrap gap-x-3 items-center justify-between"><p className="text-xs leading-normal max-w-md">Texto mostrado por la herramienta oficial de BibleGateway dentro de la app; no se copia ni se guarda. Requiere Internet. La consulta sin conexión usa Reina-Valera 1909.</p><a href={url} target="_blank" rel="noreferrer" className="text-xs underline">Abrir en BibleGateway (sale de la app)</a></div>
 </>):(<>
