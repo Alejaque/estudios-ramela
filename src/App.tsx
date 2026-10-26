@@ -1,3 +1,4 @@
+import { referenceLinks, bibleUrlTransform } from './utils/bibleReferences';
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -40,6 +41,7 @@ export default function App() {
  const [size,setSize]=useState(()=>Number(localStorage.getItem('library_size'))||22);
  const [pulpit,setPulpit]=useState(false);
  const [bible,setBible]=useState(false);
+ const [verseRef,setVerseRef]=useState<string|null>(null);
  const [archive,setArchive]=useState(false);
  const [notes,setNotes]=useState(false);
  const [importError,setImportError]=useState('');
@@ -80,9 +82,10 @@ export default function App() {
  <button onClick={()=>setEditing(true)} className="library-control" style={{background:'#315b46',color:'white'}}><PenLine size={18}/> Editar estudio</button></div>
  {edit&&<p className="mt-3 text-sm flex flex-wrap gap-3 items-center"><span>✎ Editado en este dispositivo</span>{edit.previous.length>0&&<button className="underline py-2" onClick={undoEdit}>Deshacer último cambio</button>}<button className="underline py-2" onClick={restoreOriginal}>Volver al texto original</button></p>}</div>
  <details className="mb-5 border-y border-[#cbd4c9] dark:border-[#405245] py-3"><summary className="font-semibold cursor-pointer">Recorrido del estudio</summary><div className="flex flex-wrap gap-2 mt-3">{sections.map(s=><button key={s} onClick={()=>jump(s)} className="library-control text-sm">{s}</button>)}</div></details>
- {editing?<StudyEditor key={study.id} title={study.title} content={study.content} size={size} onSave={saveEdit} onCancel={()=>setEditing(false)}/>:<article id="reading" className="library-reading bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl px-5 sm:px-9 py-7 sm:py-10 shadow-sm" style={{fontSize:size,lineHeight:1.75}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{study.content}</ReactMarkdown></article>}
+ {editing?<StudyEditor key={study.id} title={study.title} content={study.content} size={size} onSave={saveEdit} onCancel={()=>setEditing(false)}/>:<article id="reading" className="library-reading bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl px-5 sm:px-9 py-7 sm:py-10 shadow-sm" style={{fontSize:size,lineHeight:1.75}}><ReactMarkdown remarkPlugins={[remarkGfm, referenceLinks(study.passageOrTopic)]} urlTransform={bibleUrlTransform} components={{a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted text-[#315b46]" onClick={()=>setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{study.content}</ReactMarkdown></article>}
  {notes&&<div className="mt-6"><PersonalNotes passageOrTopic={study.passageOrTopic}/></div>}
  </section>:<section className="py-10 font-serif text-2xl">Tus borradores aparecerán acá.</section>}</main>
+ {verseRef&&<BibleVerseModal reference={verseRef} onClose={()=>setVerseRef(null)}/>}
  {bible&&<BibleVerseModal reference={study.passageOrTopic} onClose={()=>setBible(false)}/>}
  {archive&&<div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl p-6 w-full max-w-xl max-h-[85dvh] overflow-auto"><div className="flex justify-between items-center mb-4"><h2 className="font-serif text-2xl">Guardados anteriores</h2><button aria-label="Cerrar guardados" onClick={()=>setArchive(false)} className="p-3"><X/></button></div>{previous.map(s=><button key={s.id} onClick={()=>load(s)} className="block w-full text-left p-4 border-b"><strong>{s.passageOrTopic}</strong><span className="block">{s.title}</span></button>)}</div></div>}
  <PulpitModal isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={(currentIsDraft?'# Borrador\n\n':'')+study.content}/>
