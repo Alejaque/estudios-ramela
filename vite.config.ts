@@ -116,6 +116,7 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
+<<<<<<< main
           // La versión nueva se activa sola en cuanto se descarga; la página
           // abierta no se toca (main.tsx decide cuándo recargar, solo en un
           // momento seguro).
@@ -123,6 +124,9 @@ export default defineConfig(() => {
           clientsClaim: true,
           maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}'],
+=======
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2,ttf}'],
+>>>>>>> feat/estudio-personal
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
