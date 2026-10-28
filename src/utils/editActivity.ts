@@ -27,4 +27,4 @@ export function endEditingActivity(): void {
   setAppBusySource(SOURCE, false);
 }
 
-// Marcador de prueba 3.
+// Marcador de prueba 4.
