@@ -27,4 +27,4 @@ export function endEditingActivity(): void {
   setAppBusySource(SOURCE, false);
 }
 
-// Marcador de prueba 2 (bloqueo durante escritura).
+// Marcador de prueba 3.
