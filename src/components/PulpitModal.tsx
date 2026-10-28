@@ -1,11 +1,10 @@
+import { referenceLinks, bibleUrlTransform } from '../utils/bibleReferences';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
   X,
   Printer,
-  ZoomIn,
-  ZoomOut,
   Maximize,
   Minimize,
   Play,
@@ -17,8 +16,9 @@ import {
   FileDown,
   Palette,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Bold,
-  ArrowLeft,
   Timer,
   Maximize2,
   Minimize2,
@@ -87,6 +87,21 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     try { return localStorage.getItem('pulpit_highlight') !== '0'; } catch { return true; }
   });
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  // Botonera compacta: los saltos y opciones extra quedan plegados por defecto
+  // en pantallas chicas para dejar lugar al texto; la eleccion se recuerda.
+  const [moreOpen, setMoreOpen] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('pulpit_jumps_open');
+      if (saved === '1') return true;
+      if (saved === '0') return false;
+    } catch {
+      // Sin storage disponible: usa el ancho de pantalla.
+    }
+    return typeof window !== 'undefined' ? window.innerWidth >= 1280 : false;
+  });
+  // Desplegables Vista y Tema: transitorios, se cierran al elegir una opcion.
+  const [vistaOpen, setVistaOpen] = useState<boolean>(false);
+  const [temaOpen, setTemaOpen] = useState<boolean>(false);
   const [personalNote, setPersonalNote] = useState<string>('');
   const [verseRef, setVerseRef] = useState<string | null>(null);
 
@@ -214,6 +229,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   useEffect(() => {
     try { localStorage.setItem('pulpit_highlight', highlightIdeas ? '1' : '0'); } catch { /* sin storage */ }
   }, [highlightIdeas]);
+  useEffect(() => {
+    try { localStorage.setItem('pulpit_jumps_open', moreOpen ? '1' : '0'); } catch { /* sin storage */ }
+  }, [moreOpen]);
 
   const handleTimerPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || timerDragRef.current) return;
@@ -336,6 +354,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
   // Bosquejo con la Oración de Transición y Vista Previa tras la Gran Idea.
   const displayContent = ensureOutlineTransition(content);
+  // El salto «Contexto» solo se ofrece cuando el estudio tiene esa sección;
+  // en estudios sin contexto (p. ej. Juan 6) el boton quedaria inerte.
+  const hasContextoSection = /(^|\n)#{1,6}\s+[^\n]*contexto/i.test(displayContent);
   const readingContent = highlightIdeas ? highlightKeyIdeas(displayContent) : displayContent;
   const pulpitSummary = viewMode === 'summary' ? buildPulpitSummary(displayContent) : null;
 
@@ -484,22 +505,6 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     scrollToHeading(`Punto ${numeral}`);
   };
 
-  const BoldAsVerse = ({ children }: { children?: React.ReactNode }) => {
-    const text = String(children ?? '');
-    const verseRegex = /^([1-3]?\s?[A-Za-záéíóúüñÁÉÍÓÚÜÑ]+\.?\s\d+[:\d,\-\s]*)/;
-    if (verseRegex.test(text.trim())) {
-      return (
-        <strong
-          className="cursor-pointer underline decoration-dotted text-blue-400 hover:text-blue-300 transition-colors"
-          onClick={() => setVerseRef(text.trim())}
-          title="Tocar para leer el pasaje"
-        >
-          {children}
-        </strong>
-      );
-    }
-    return <strong className="font-bold">{children}</strong>;
-  };
 
   return (
     <div data-pulpit-theme={theme} className={`pulpit-view fixed inset-0 w-screen h-dvh z-50 flex flex-col font-theology-serif select-none ${themeClasses}`}>
@@ -512,23 +517,11 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
       {/* Top Preaching Control Bar */}
       <div
-        className={`px-4 sm:px-6 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 no-print shadow-md ${headerThemeClasses} font-sans`}
+        className={`px-4 sm:px-6 py-1 border-b flex flex-wrap items-center justify-between gap-2 no-print shadow-md ${headerThemeClasses} font-sans`}
       >
-        {/* Volver a Estudio (bien visible, arriba a la izquierda) */}
-        <button
-          type="button"
-          onClick={onClose}
-          title="Volver al modo estudio"
-          aria-label="Volver a Estudio"
-          className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-extrabold shadow-md transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5 shrink-0" />
-          <span>← Volver a Estudio</span>
-        </button>
-
         {/* Title and Clock */}
         <div className="flex items-center gap-3 min-w-0">
-          <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+          <span className="hidden lg:inline-block text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
             Atril / Púlpito
           </span>
           <h2 className="text-sm sm:text-base font-bold truncate max-w-xs sm:max-w-md font-theology-serif">
@@ -617,78 +610,22 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             )}
           </div>
 
-          {/* Font Size */}
-          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 overflow-hidden text-xs">
-            <button
-              onClick={() => setFontSize((s) => Math.max(16, s - 2))}
-              title="Reducir letra"
-              className="p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </button>
-            <span className="px-1.5 text-[11px] font-mono">{fontSize}px</span>
-            <button
-              onClick={() => setFontSize((s) => Math.min(36, s + 2))}
-              title="Aumentar letra"
-              className="p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Theme Selector: con etiqueta de texto para que "volver a oscuro" sea obvio */}
-          <div className="flex items-center rounded-xl bg-black/20 border border-white/10 p-0.5 text-[11px] font-semibold" role="group" aria-label="Tema del púlpito">
-            {([
-              ['dark-oled', '🌙 Oscuro', 'Tema oscuro'],
-              ['sepia', '📜 Sepia', 'Tema sepia'],
-              ['light', '☀️ Claro', 'Tema claro'],
-            ] as Array<[PulpitTheme, string, string]>).map(([value, label, title]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setTheme(value)}
-                title={title}
-                aria-pressed={theme === value}
-                className={`px-2.5 min-h-[40px] rounded-lg cursor-pointer whitespace-nowrap transition-colors ${
-                  theme === value ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Fullscreen */}
+          {/* Pantalla completa: a mano, junto a la X */}
           <button
+            type="button"
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa para el atril'}
-            className="p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer"
           >
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
 
-          {/* PDF */}
-          <button
-            onClick={handleExportPdf}
-            title="Exportar a PDF"
-            className="p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
-          >
-            <FileDown className="w-4 h-4 text-blue-400" />
-          </button>
-
-          {/* Print */}
-          <button
-            onClick={handlePrint}
-            title="Imprimir hoja para el púlpito"
-            className="p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
-
-          {/* Close */}
+          {/* Cerrar: unico boton para salir del modo pulpit */}
           <button
             onClick={onClose}
             title="Cerrar modo púlpito"
+            aria-label="Cerrar modo púlpito"
             className="p-2 rounded-xl bg-red-600/80 hover:bg-red-600 text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -697,60 +634,156 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       </div>
 
       {/* Vista del estudio + Quick Outline Jump Bar */}
-      <div className="pulpit-jumps px-4 sm:px-8 py-1.5 bg-black/30 border-b border-white/5 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs font-sans no-print">
-        <div className="flex items-center rounded-lg bg-white/10 p-0.5 shrink-0 mr-1" role="group" aria-label="Vista del estudio">
+      <div className="pulpit-jumps px-4 sm:px-8 py-1 bg-black/30 border-b border-white/5 flex flex-wrap items-center gap-1.5 text-base font-sans no-print">
+        {/* Desplegable Letra: tamano numerico del estudio */}
+        <span className="flex items-center gap-1.5 px-3 min-h-[40px] rounded-md bg-white/5 text-slate-300 shrink-0" title="Tamaño de letra del estudio">
+          <span className="text-sm font-semibold">Letra</span>
+          <select
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
+            aria-label="Tamaño de letra del estudio"
+            className="bg-transparent text-sm font-bold text-white outline-none cursor-pointer"
+          >
+            {[16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36].map((n) => (
+              <option key={n} value={n} className="bg-slate-900 text-white">{n}</option>
+            ))}
+          </select>
+        </span>
+        {/* Desplegable Tema: Oscuro / Sepia / Claro */}
+        <button
+          type="button"
+          onClick={() => { setTemaOpen(!temaOpen); setVistaOpen(false); }}
+          aria-expanded={temaOpen}
+          title={temaOpen ? 'Ocultar opciones de tema' : 'Elegir tema Oscuro, Sepia o Claro'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1.5 font-semibold transition-colors ${
+            temaOpen ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          Tema
+          {temaOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {temaOpen && (
+        <>
+        {([
+          ['dark-oled', '🌙 Oscuro', 'Tema oscuro'],
+          ['sepia', '📜 Sepia', 'Tema sepia'],
+          ['light', '☀️ Claro', 'Tema claro'],
+        ] as Array<[PulpitTheme, string, string]>).map(([value, label, title]) => (
           <button
+            key={value}
             type="button"
-            onClick={() => setViewMode('full')}
-            aria-pressed={viewMode === 'full'}
-            className={`px-3 py-2 rounded-md cursor-pointer whitespace-nowrap transition-colors ${
-              viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
+            onClick={() => { setTheme(value); setTemaOpen(false); }}
+            title={title}
+            aria-pressed={theme === value}
+            className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer whitespace-nowrap transition-colors ${
+              theme === value ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
             }`}
           >
-            Completo
+            {label}
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('summary')}
-            aria-pressed={viewMode === 'summary'}
-            title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
-            className={`px-3 py-2 rounded-md cursor-pointer whitespace-nowrap transition-colors ${
-              viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            ⚡ Resumen
-          </button>
-        </div>
+        ))}
+        </>
+        )}
+        {/* Desplegable Vista: Completo / Resumen */}
+        <button
+          type="button"
+          onClick={() => { setVistaOpen(!vistaOpen); setTemaOpen(false); }}
+          aria-expanded={vistaOpen}
+          title={vistaOpen ? 'Ocultar opciones de vista' : 'Elegir vista Completo o Resumen'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1.5 font-semibold transition-colors ${
+            vistaOpen ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          Vista
+          {vistaOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {vistaOpen && (
+        <>
+        <button
+          type="button"
+          onClick={() => { setViewMode('full'); setVistaOpen(false); }}
+          aria-pressed={viewMode === 'full'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer whitespace-nowrap transition-colors ${
+            viewMode === 'full' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          Completo
+        </button>
+        <button
+          type="button"
+          onClick={() => { setViewMode('summary'); setVistaOpen(false); }}
+          aria-pressed={viewMode === 'summary'}
+          title="Resumen: punto principal, puntos con explicación corta, aplicación, conclusión, llamado y oración"
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer whitespace-nowrap transition-colors ${
+            viewMode === 'summary' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          ⚡ Resumen
+        </button>
+        </>
+        )}
         {viewMode === 'full' && (
         <>
-        <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
-          <Compass className="w-3.5 h-3.5 text-amber-400" />
-          Salto rápido:
-        </span>
-        {[
-          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
-        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
-        {personalNote && (
-          <button
-            type="button"
-            onClick={() => scrollToHeading('Notas y Reflexiones')}
-            className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
-          >
-            ✍️ Mis Notas
-          </button>
-        )}
         <button
           type="button"
           onClick={() => setHighlightIdeas(!highlightIdeas)}
           aria-pressed={highlightIdeas}
           title="Resaltar en negrita las ideas principales de cada sección"
-          className={`px-3 py-2 rounded-lg shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${
             highlightIdeas ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-300 hover:text-white'
           }`}
         >
           <Bold className="w-3.5 h-3.5" />
           Ideas
         </button>
+        <button
+          type="button"
+          onClick={() => setMoreOpen(!moreOpen)}
+          aria-expanded={moreOpen}
+          title={moreOpen ? 'Ocultar saltos y opciones' : 'Mostrar saltos a cada sección y más opciones'}
+          className={`px-3.5 min-h-[40px] rounded-md shrink-0 cursor-pointer flex items-center gap-1.5 font-semibold transition-colors ${
+            moreOpen ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300 hover:text-white'
+          }`}
+        >
+          <Compass className="w-4 h-4 text-amber-400" />
+          Saltos
+          {moreOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {moreOpen && (
+        <>
+        {[
+          ...(hasContextoSection ? [['Contexto','Contexto'] as [string,string]] : []),
+          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
+        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
+        {personalNote && (
+          <button
+            type="button"
+            onClick={() => scrollToHeading('Notas y Reflexiones')}
+            className="px-3 min-h-[40px] rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors shrink-0 cursor-pointer font-semibold"
+          >
+            ✍️ Mis Notas
+          </button>
+        )}
+        <span className="flex items-center gap-1.5 ml-auto">
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            title="Exportar a PDF"
+            className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer hidden sm:block"
+          >
+            <FileDown className="w-4 h-4 text-blue-400" />
+          </button>
+          <button
+            type="button"
+            onClick={handlePrint}
+            title="Imprimir hoja para el púlpito"
+            className="p-2 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors cursor-pointer hidden sm:block"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+        </span>
+        </>
+        )}
         </>
         )}
       </div>
@@ -758,11 +791,11 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       {/* Main Preaching Content */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-5 sm:px-12 md:px-20 lg:px-32 pt-10 pb-44"
+        className="flex-1 overflow-y-auto px-5 sm:px-12 md:px-20 lg:px-32 pt-3 pb-44"
       >
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
-          <div className="border-b pb-4 mb-6 border-white/10">
+          <div className="border-b pb-3 mb-4 border-white/10">
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-theology-serif tracking-tight mb-2 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setVerseRef(passageOrTopic.trim())}
@@ -784,7 +817,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           >
             {viewMode === 'summary' ? (
               pulpitSummary ? (
-                <PulpitSummaryView summary={pulpitSummary} />
+                <PulpitSummaryView summary={pulpitSummary} context={passageOrTopic} onReference={setVerseRef} />
               ) : (
                 <p>
                   Este estudio todavía no tiene una estructura que el resumen pueda
@@ -794,8 +827,9 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               )
             ) : (
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{ strong: BoldAsVerse }}
+                remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                urlTransform={bibleUrlTransform}
+                components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
               >
                 {readingContent}
               </ReactMarkdown>
@@ -1039,7 +1073,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
  * Todo el texto viene del estudio cargado (ver buildPulpitSummary); no se
  * genera contenido nuevo.
  */
-const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').PulpitSummary }> = ({ summary }) => {
+const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').PulpitSummary; context:string; onReference:(ref:string)=>void }> = ({ summary,context,onReference }) => {
+  const linked=(text:string|undefined)=><ReactMarkdown remarkPlugins={[remarkGfm,referenceLinks(context)]} urlTransform={bibleUrlTransform} components={{p:({children})=><span>{children}</span>,a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted underline-offset-4" onClick={()=>onReference(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{text||''}</ReactMarkdown>;
   const applications = summary.points.filter((point) => point.application);
   return (
     <div className="pulpit-summary space-y-7">
@@ -1051,7 +1086,7 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
         <section>
           <h2>Punto principal</h2>
           <p>
-            <strong>{summary.proposition}.</strong>
+            <strong>{linked(summary.proposition)}.</strong>
           </p>
         </section>
       )}
@@ -1059,8 +1094,8 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
         <section className="space-y-5">
           {summary.points.map((point) => (
             <div key={point.numeral}>
-              <h3>{point.title}</h3>
-              {point.explanation && <p>{point.explanation}</p>}
+              <h3>{linked(point.title)}</h3>
+              {point.explanation && <p>{linked(point.explanation)}</p>}
             </div>
           ))}
         </section>
@@ -1070,7 +1105,7 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
           <h2>Aplicación práctica</h2>
           <ul>
             {applications.map((point) => (
-              <li key={point.numeral}>{point.application}</li>
+              <li key={point.numeral}>{linked(point.application)}</li>
             ))}
           </ul>
         </section>
@@ -1078,14 +1113,14 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
       {summary.conclusion && (
         <section>
           <h2>Conclusión</h2>
-          <p>{summary.conclusion}</p>
+          <p>{linked(summary.conclusion)}</p>
         </section>
       )}
       {summary.call && (
         <section>
           <h2>Llamado a la acción</h2>
           <p>
-            <strong>{summary.call}</strong>
+            <strong>{linked(summary.call)}</strong>
           </p>
         </section>
       )}
@@ -1093,7 +1128,7 @@ const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').Pu
         <section>
           <h2>Oración</h2>
           {summary.prayer.split('\n\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+            <p key={index}>{linked(paragraph)}</p>
           ))}
         </section>
       )}
