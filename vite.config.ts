@@ -63,13 +63,25 @@ function devApiPlugin(): Plugin {
 }
 
 export default defineConfig(() => {
+  const buildStamp = new Date().toLocaleString('es-AR', {
+    timeZone: 'America/Argentina/Cordoba',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
   return {
+    define: {
+      __APP_BUILD__: JSON.stringify(buildStamp),
+    },
     plugins: [
       react(),
       tailwindcss(),
       devApiPlugin(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'portada-alejandro-ramela.jpg'],
         manifest: {
           id: '/',
@@ -104,6 +116,11 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
+          // La versión nueva se activa sola en cuanto se descarga; la página
+          // abierta no se toca (main.tsx decide cuándo recargar, solo en un
+          // momento seguro).
+          skipWaiting: true,
+          clientsClaim: true,
           maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}'],
           runtimeCaching: [
