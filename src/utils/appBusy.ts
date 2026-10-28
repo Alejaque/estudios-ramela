@@ -1,4 +1,4 @@
-// Marca global (quinta pasada de prueba) de "la app está en uso delicado" (púlpito, edición, notas,
+// Marca global (sexta pasada: caso edicion sin guardar) de "la app está en uso delicado" (púlpito, edición, notas,
 // lectura de pasaje, generación). La usa main.tsx para NO recargar la página
 // en medio de una prédica o con trabajo sin guardar cuando llega una
 // actualización del service worker.
