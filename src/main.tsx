@@ -4,7 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import {registerSW} from 'virtual:pwa-register';
 
-// Mantener la app siempre actualizada: busca una versión nueva del service
+// Mantener la app siempre actualizada (verificado de punta a punta): busca una versión nueva del service
 // worker al abrir la app, cada vez que vuelve a primer plano y una vez por
 // hora mientras queda abierta. En vite.config.ts el registro es
 // 'autoUpdate': cuando hay una versión nueva lista, la página se recarga
