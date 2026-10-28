@@ -16,7 +16,7 @@ import {isAppBusy} from './utils/appBusy';
 //   generando un borrador. Si está en uso, reintenta cada 15 segundos hasta
 //   que quede libre.
 // Los estudios y apuntes guardados viven en localStorage y no se tocan con
-// las actualizaciones.
+// las actualizaciones. (Prueba de deferral OK.)
 let pendingReload = false;
 
 function reloadWhenFree() {
