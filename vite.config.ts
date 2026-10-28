@@ -81,7 +81,7 @@ export default defineConfig(() => {
       tailwindcss(),
       devApiPlugin(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'portada-alejandro-ramela.jpg'],
         manifest: {
           id: '/',
