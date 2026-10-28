@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { setAppBusySource } from '../utils/appBusy';
+import { noteEditingActivity, endEditingActivity } from '../utils/editActivity';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -15,7 +17,6 @@ import {
   Upload,
 } from 'lucide-react';
 import { PulpitModal } from './PulpitModal';
-import { PassageConsult } from './PassageConsult';
 import { PassageReader } from './PassageReader';
 import { exportStudyToPdf } from '../utils/pdfExport';
 import {
@@ -127,6 +128,13 @@ export const PersonalStudy: React.FC = () => {
   const [saveState, setSaveState] = useState<'saved' | 'saving'>('saved');
   const [preview, setPreview] = useState(false);
   const [pulpit, setPulpit] = useState(false);
+  useEffect(() => {
+    setAppBusySource('taller-pulpito', pulpit);
+    return () => setAppBusySource('taller-pulpito', false);
+  }, [pulpit]);
+  // Al salir del Estudio personal se libera de inmediato cualquier
+  // actividad de escritura que hubiera quedado en la ventana de gracia.
+  useEffect(() => () => endEditingActivity(), []);
   const [importError, setImportError] = useState('');
   const [importConflicts, setImportConflicts] = useState<{
     incoming: PersonalStudyDoc[];
@@ -249,7 +257,7 @@ export const PersonalStudy: React.FC = () => {
   const crossUrl = doc ? crossRefsUrl(doc.passageOrTopic) : null;
 
   return (
-    <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
+    <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start" onInputCapture={() => noteEditingActivity()}>
       <aside className="lg:sticky lg:top-28">
         <h2 className="font-serif text-2xl flex gap-2 items-center mb-4">
           <NotebookPen size={22} /> Mi estudio
@@ -484,20 +492,6 @@ export const PersonalStudy: React.FC = () => {
               </a>
             </div>
           </details>
-
-          <PassageConsult
-            passage={doc.passageOrTopic}
-            sections={ALL_SECTIONS}
-            onSave={(key, text) =>
-              updateDoc((s) => ({
-                ...s,
-                sections: {
-                  ...s.sections,
-                  [key]: ((s.sections[key] || '').trimEnd() + '\n\n' + text).trim(),
-                },
-              }))
-            }
-          />
 
           {preview && (
             <article
