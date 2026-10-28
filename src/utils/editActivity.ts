@@ -26,3 +26,5 @@ export function endEditingActivity(): void {
   }
   setAppBusySource(SOURCE, false);
 }
+
+// Marcador de prueba de actualizacion en preview (sin efecto funcional).
