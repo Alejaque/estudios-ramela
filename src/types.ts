@@ -41,12 +41,3 @@ export interface PersonalNote {
   note: string;
   updatedAt: string;
 }
-
-export interface PersonalStudyDoc {
-  id: string;
-  title: string;
-  passageOrTopic: string;
-  sections: Record<string, string>;
-  createdAt: string;
-  updatedAt: string;
-}
