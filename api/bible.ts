@@ -1,9 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Etiquetas honestas: el id lo da api.bible; NO hay Reina-Valera 1960 en su catalogo publico.
-const BIBLES: Record<string, { id: string; name: string }> = {
-  rvr1909: { id: '592420522e16049f-01', name: 'Reina-Valera 1909 (dominio público; NO es la RVR1960)' },
-  simple: { id: 'b32b9d1b64b4ef29-01', name: 'The Holy Bible in Simple Spanish (NO es la NVI)' },
+const BIBLES: Record<string, string> = {
+  rvr60: '592420522e16049f-01', // en api.bible es la Reina-Valera 1909 (dominio publico)
+  nvi: 'b32b9d1b64b4ef29-01', // en api.bible es "Simple Spanish", no la NVI
 };
 
 const BOOKS: Record<string, string> = {
@@ -38,9 +37,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const key = process.env.BIBLE_API_KEY;
   if (!key) return res.status(500).json({ error: 'Falta BIBLE_API_KEY en el servidor' });
   const ref = String(req.query.ref || '');
-  const version = String(req.query.version || 'rvr1909');
-  const bible = BIBLES[version];
-  const bibleId = bible?.id;
+  const version = String(req.query.version || 'rvr60');
+  const bibleId = BIBLES[version];
   const passageId = toPassageId(ref);
   if (!bibleId || !passageId) return res.status(400).json({ error: 'Referencia no reconocida' });
   const url =
@@ -50,5 +48,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!r.ok) return res.status(r.status).json({ error: 'No encontrado' });
   const data = await r.json();
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
-  res.json({ version, versionName: bible.name, text: String(data.data?.content || '').trim(), reference: data.data?.reference, copyright: data.data?.copyright });
+  res.json({ text: String(data.data?.content || '').trim(), reference: data.data?.reference, copyright: data.data?.copyright });
 }
