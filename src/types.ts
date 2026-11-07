@@ -23,6 +23,8 @@ export interface SavedStudy {
   translation?: string;
   /** Texto del pasaje plegado: se abre al tocar "Pasaje" y no ocupa pantalla en el apunte. */
   passageText?: string;
+  /** Etiqueta del pasaje cuando el usuario editó el texto (evita mostrar referencia/versión que no corresponde). */
+  passageLabel?: string;
 }
 
 export interface QuickSuggestion {
