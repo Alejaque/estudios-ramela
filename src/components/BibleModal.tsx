@@ -42,6 +42,14 @@ const gridBtn =
   'min-h-[52px] rounded-lg border border-[#a9b9a9] font-bold text-[15px] text-center px-1 ' +
   'hover:bg-[#eef2ea] active:bg-[#e3ebe0] transition-colors cursor-pointer';
 
+// Colores por testamento (pedido de Ale): AT ámbar pergamino, NT celeste; contraste alto sobre la tarjeta clara.
+const gridBtnOT =
+  'min-h-[52px] rounded-lg border-2 border-[#c9a227] bg-[#f5e9c8] text-[#5c4a08] font-bold text-[15px] text-center px-1 ' +
+  'hover:bg-[#efdfae] active:bg-[#e8d394] transition-colors cursor-pointer';
+const gridBtnNT =
+  'min-h-[52px] rounded-lg border-2 border-[#5b8ec4] bg-[#dcebf9] text-[#1d4368] font-bold text-[15px] text-center px-1 ' +
+  'hover:bg-[#c6e0f5] active:bg-[#b0d4f0] transition-colors cursor-pointer';
+
 type Version = 'rv1909' | 'RVR1960' | 'PDT';
 
 export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -175,15 +183,15 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             {refError && <p role="alert" className="text-sm mb-3 text-[#8a3b2e]">No encontré esa referencia. Probá, por ejemplo: Juan 3:16 o Salmos 23.</p>}
             <p className="text-sm opacity-70 mb-2">Elegí un libro:</p>
             {([
-              ['Antiguo Testamento', otBooks],
-              ['Nuevo Testamento', ntBooks],
-            ] as const).map(([label, list]) =>
+              ['Antiguo Testamento', otBooks, gridBtnOT, 'text-[#8a6d10]'],
+              ['Nuevo Testamento', ntBooks, gridBtnNT, 'text-[#2f5a86]'],
+            ] as const).map(([label, list, btnCls, labelCls]) =>
               list.length > 0 && (
                 <div key={label} className="mb-4">
-                  <p className="text-xs font-bold tracking-[0.15em] uppercase opacity-60 mb-2">{label}</p>
+                  <p className={`text-xs font-bold tracking-[0.15em] uppercase mb-2 ${labelCls}`}>{label}</p>
                   <div className="grid grid-cols-6 gap-1.5">
                     {list.map(([key, name, abbr]) => (
-                      <button key={key} onClick={() => openBook(key)} title={name} aria-label={name} className={gridBtn}>
+                      <button key={key} onClick={() => openBook(key)} title={name} aria-label={name} className={btnCls}>
                         {abbr}
                       </button>
                     ))}
