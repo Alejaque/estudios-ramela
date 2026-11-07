@@ -298,3 +298,14 @@
 .library-reading h3,.library-reading h4 {font-size:1.1em;font-weight:700;margin:1.4em 0 0.6em;line-height:1.4;}
 .library-reading ul {list-style:disc;padding-left:1.5em;margin-bottom:1.1em;}
 .library-control[aria-pressed=true] {background:#315b46;color:white;border-color:#315b46;}
+
+/* Ganchos de memoria (negrita+itálica autoral ***) solo en estudios marcados hook-emphasis:
+   subrayado y leve aumento, sin tocar negritas comunes ni otros estudios. */
+.library-reading.hook-emphasis :is(strong em, em strong),
+.pulpit-view .pulpit-markdown.hook-emphasis :is(strong em, em strong) {
+  font-style: normal;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 1.08em;
+}
