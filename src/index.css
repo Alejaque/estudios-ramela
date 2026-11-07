@@ -194,6 +194,12 @@
 }
 
 /* Pulpit / Teleprompter Print Mode */
+/* Bloques solo para impresión (p. ej. el pasaje plegado del púlpito):
+   ocultos en pantalla, visibles en la hoja impresa. */
+.print-only {
+  display: none;
+}
+
 @media print {
   body {
     background: white !important;
@@ -209,6 +215,33 @@
     font-size: 12pt;
     line-height: 1.6;
     color: black !important;
+  }
+
+  /* Púlpito impreso CON pasaje plegado: solo el contenido del sermón,
+     desanclado para que pagine (sin esto, la vista fija repetía la primera
+     pantalla en cada página y el pasaje nunca llegaba a la hoja).
+     Acotado a estudios con passageText (clase print-with-passage);
+     el resto del púlpito imprime como antes. */
+  body:has(.pulpit-view.print-with-passage) .library-shell > *:not(.pulpit-view) {
+    display: none !important;
+  }
+  .pulpit-view.print-with-passage {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
+  }
+  .pulpit-view.print-with-passage .overflow-y-auto {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding-bottom: 0 !important;
+  }
+  .pulpit-view.print-with-passage :is(h1, h2, h3, h4, p, li, strong, em, span, a, button, blockquote) {
+    color: black !important;
+    background: transparent !important;
+    border-color: #999 !important;
   }
 }
 
