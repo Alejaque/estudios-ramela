@@ -21,6 +21,8 @@ export interface SavedStudy {
   content: string;
   createdAt: string;
   translation?: string;
+  /** Texto del pasaje plegado: se abre al tocar "Pasaje" y no ocupa pantalla en el apunte. */
+  passageText?: string;
 }
 
 export interface QuickSuggestion {
