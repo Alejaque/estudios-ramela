@@ -38,6 +38,7 @@ interface PulpitModalProps {
   translation?: string;
   content: string;
   hookEmphasis?: boolean;
+  studyId?: string;
 }
 
 type PulpitTheme = 'dark-oled' | 'sepia' | 'light' | 'midnight';
@@ -68,10 +69,30 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   translation,
   content,
   hookEmphasis,
+  studyId,
 }) => {
   const [fontSize, setFontSize] = useState<number>(() =>
-    typeof window !== 'undefined' && window.innerWidth <= 1024 ? 24 : 22
+    hookEmphasis && studyId
+      ? Number(localStorage.getItem('pulpit_font_' + studyId)) || 20
+      : typeof window !== 'undefined' && window.innerWidth <= 1024 ? 24 : 22
   );
+  // Tamano de pulpito acotado por estudio: al entrar al estudio especial, guardar el
+  // tamano "normal" vigente y aplicar el suyo (guardado o 20); al volver a otro
+  // estudio, restaurar el normal. Asi el 20 del especial nunca contamina al resto.
+  const fontSizeRef = useRef(fontSize);
+  useEffect(() => { fontSizeRef.current = fontSize; }, [fontSize]);
+  const normalSizeRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    if (hookEmphasis && studyId) {
+      normalSizeRef.current = fontSizeRef.current;
+      setFontSize(Number(localStorage.getItem('pulpit_font_' + studyId)) || 20);
+    } else if (normalSizeRef.current != null) {
+      const prev = normalSizeRef.current;
+      normalSizeRef.current = null;
+      setFontSize(prev);
+    }
+  }, [isOpen, hookEmphasis, studyId]);
   const [theme, setTheme] = useState<PulpitTheme>(() => {
     try {
       const saved = localStorage.getItem('pulpit_theme');
@@ -642,7 +663,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           <span className="text-sm font-semibold">Letra</span>
           <select
             value={fontSize}
-            onChange={(e) => setFontSize(Number(e.target.value))}
+            onChange={(e) => { const v = Number(e.target.value); setFontSize(v); if (hookEmphasis && studyId) { try { localStorage.setItem('pulpit_font_' + studyId, String(v)); } catch { /* sin storage */ } } }}
             aria-label="Tamaño de letra del estudio"
             className="bg-transparent text-sm font-bold text-white outline-none cursor-pointer"
           >
