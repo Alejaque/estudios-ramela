@@ -43,6 +43,8 @@ interface PulpitModalProps {
   studyId?: string;
   /** Texto del pasaje plegado: se abre desde Saltos > Pasaje sin ocupar pantalla. */
   passageText?: string;
+  /** Etiqueta del pasaje editado por el usuario (reemplaza referencia/versión en el título del overlay). */
+  passageLabel?: string;
 }
 
 type PulpitTheme = 'dark-oled' | 'sepia' | 'light' | 'midnight';
@@ -75,6 +77,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   hookEmphasis,
   studyId,
   passageText,
+  passageLabel,
 }) => {
   const [fontSize, setFontSize] = useState<number>(() =>
     hookEmphasis && studyId
@@ -565,7 +568,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           >
             <div className="p-4 border-b border-[#d8c98a] flex justify-between items-center gap-3">
               <h2 className="text-lg font-bold font-theology-serif">
-                Pasaje · {passageOrTopic}{translation ? ` (${translation})` : ''}
+                {passageLabel ?? `Pasaje · ${passageOrTopic}${translation ? ` (${translation})` : ''}`}
               </h2>
               <button
                 type="button"
