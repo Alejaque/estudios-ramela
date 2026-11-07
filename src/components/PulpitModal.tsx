@@ -538,6 +538,20 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
       return;
     }
 
+    // 2b) Solo 2 Co 5:16-21: copias guardadas cuyo titulo del desarrollo no lleva
+    //     el numeral ("La cruz: fundamento de las dos respuestas"). Se reconoce
+    //     por el encabezado del desarrollo, sin tocar el texto guardado.
+    if (studyId === '2co-5-17-21-breve-20261106') {
+      const key = { I: 'quienes somos', II: 'para que estamos', III: 'fundamento de las dos respuestas' }[numeral];
+      const byTitle = Array.from(container.querySelectorAll('h1, h2, h3, h4')).find((el) =>
+        normalizeText(el.textContent ?? '').includes(key)
+      );
+      if (byTitle) {
+        scrollWithinContainer(byTitle);
+        return;
+      }
+    }
+
     // 3) Último recurso: cualquier mención al punto.
     scrollToHeading(`Punto ${numeral}`);
   };
