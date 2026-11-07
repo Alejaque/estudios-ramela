@@ -7,32 +7,40 @@ import data from '../data/rv1909';
 // Reina-Valera 1909 completa, incluida en la app (dominio público, funciona sin conexión).
 const bible = data as Record<string, Record<string, Record<string, string>>>;
 
-// [clave normalizada en los datos, nombre para mostrar] en orden canónico.
-const BOOKS: [string, string][] = [
-  ['genesis', 'Génesis'], ['exodo', 'Éxodo'], ['levitico', 'Levítico'], ['numeros', 'Números'],
-  ['deuteronomio', 'Deuteronomio'], ['josue', 'Josué'], ['jueces', 'Jueces'], ['rut', 'Rut'],
-  ['1 samuel', '1 Samuel'], ['2 samuel', '2 Samuel'], ['1 reyes', '1 Reyes'], ['2 reyes', '2 Reyes'],
-  ['1 cronicas', '1 Crónicas'], ['2 cronicas', '2 Crónicas'], ['esdras', 'Esdras'], ['nehemias', 'Nehemías'],
-  ['ester', 'Ester'], ['job', 'Job'], ['salmos', 'Salmos'], ['proverbios', 'Proverbios'],
-  ['eclesiastes', 'Eclesiastés'], ['cantares', 'Cantares'], ['isaias', 'Isaías'], ['jeremias', 'Jeremías'],
-  ['lamentaciones', 'Lamentaciones'], ['ezequiel', 'Ezequiel'], ['daniel', 'Daniel'], ['oseas', 'Oseas'],
-  ['joel', 'Joel'], ['amos', 'Amós'], ['abdias', 'Abdías'], ['jonas', 'Jonás'],
-  ['miqueas', 'Miqueas'], ['nahum', 'Nahúm'], ['habacuc', 'Habacuc'], ['sofonias', 'Sofonías'],
-  ['hageo', 'Hageo'], ['zacarias', 'Zacarías'], ['malaquias', 'Malaquías'],
-  ['mateo', 'Mateo'], ['marcos', 'Marcos'], ['lucas', 'Lucas'], ['juan', 'Juan'],
-  ['hechos', 'Hechos'], ['romanos', 'Romanos'], ['1 corintios', '1 Corintios'], ['2 corintios', '2 Corintios'],
-  ['galatas', 'Gálatas'], ['efesios', 'Efesios'], ['filipenses', 'Filipenses'], ['colosenses', 'Colosenses'],
-  ['1 tesalonicenses', '1 Tesalonicenses'], ['2 tesalonicenses', '2 Tesalonicenses'],
-  ['1 timoteo', '1 Timoteo'], ['2 timoteo', '2 Timoteo'], ['tito', 'Tito'], ['filemon', 'Filemón'],
-  ['hebreos', 'Hebreos'], ['santiago', 'Santiago'], ['1 pedro', '1 Pedro'], ['2 pedro', '2 Pedro'],
-  ['1 juan', '1 Juan'], ['2 juan', '2 Juan'], ['3 juan', '3 Juan'], ['judas', 'Judas'],
-  ['apocalipsis', 'Apocalipsis'],
+// [clave normalizada en los datos, nombre para mostrar, abreviatura] en orden canónico.
+const BOOKS: [string, string, string][] = [
+  ['genesis', 'Génesis', 'Gn'], ['exodo', 'Éxodo', 'Ex'], ['levitico', 'Levítico', 'Lv'], ['numeros', 'Números', 'Nm'],
+  ['deuteronomio', 'Deuteronomio', 'Dt'], ['josue', 'Josué', 'Jos'], ['jueces', 'Jueces', 'Jue'], ['rut', 'Rut', 'Rt'],
+  ['1 samuel', '1 Samuel', '1S'], ['2 samuel', '2 Samuel', '2S'], ['1 reyes', '1 Reyes', '1R'], ['2 reyes', '2 Reyes', '2R'],
+  ['1 cronicas', '1 Crónicas', '1Cr'], ['2 cronicas', '2 Crónicas', '2Cr'], ['esdras', 'Esdras', 'Esd'], ['nehemias', 'Nehemías', 'Neh'],
+  ['ester', 'Ester', 'Est'], ['job', 'Job', 'Job'], ['salmos', 'Salmos', 'Sal'], ['proverbios', 'Proverbios', 'Pr'],
+  ['eclesiastes', 'Eclesiastés', 'Ec'], ['cantares', 'Cantares', 'Cnt'], ['isaias', 'Isaías', 'Is'], ['jeremias', 'Jeremías', 'Jer'],
+  ['lamentaciones', 'Lamentaciones', 'Lm'], ['ezequiel', 'Ezequiel', 'Ez'], ['daniel', 'Daniel', 'Dn'], ['oseas', 'Oseas', 'Os'],
+  ['joel', 'Joel', 'Jl'], ['amos', 'Amós', 'Am'], ['abdias', 'Abdías', 'Abd'], ['jonas', 'Jonás', 'Jon'],
+  ['miqueas', 'Miqueas', 'Miq'], ['nahum', 'Nahúm', 'Nah'], ['habacuc', 'Habacuc', 'Hab'], ['sofonias', 'Sofonías', 'Sof'],
+  ['hageo', 'Hageo', 'Hag'], ['zacarias', 'Zacarías', 'Zac'], ['malaquias', 'Malaquías', 'Mal'],
+  ['mateo', 'Mateo', 'Mt'], ['marcos', 'Marcos', 'Mr'], ['lucas', 'Lucas', 'Lc'], ['juan', 'Juan', 'Jn'],
+  ['hechos', 'Hechos', 'Hch'], ['romanos', 'Romanos', 'Ro'], ['1 corintios', '1 Corintios', '1Co'], ['2 corintios', '2 Corintios', '2Co'],
+  ['galatas', 'Gálatas', 'Ga'], ['efesios', 'Efesios', 'Ef'], ['filipenses', 'Filipenses', 'Fil'], ['colosenses', 'Colosenses', 'Col'],
+  ['1 tesalonicenses', '1 Tesalonicenses', '1Ts'], ['2 tesalonicenses', '2 Tesalonicenses', '2Ts'],
+  ['1 timoteo', '1 Timoteo', '1Ti'], ['2 timoteo', '2 Timoteo', '2Ti'], ['tito', 'Tito', 'Tit'], ['filemon', 'Filemón', 'Flm'],
+  ['hebreos', 'Hebreos', 'He'], ['santiago', 'Santiago', 'Stg'], ['1 pedro', '1 Pedro', '1P'], ['2 pedro', '2 Pedro', '2P'],
+  ['1 juan', '1 Juan', '1Jn'], ['2 juan', '2 Juan', '2Jn'], ['3 juan', '3 Juan', '3Jn'], ['judas', 'Judas', 'Jd'],
+  ['apocalipsis', 'Apocalipsis', 'Ap'],
 ];
+
+const OT_COUNT = 39; // los primeros 39 son el Antiguo Testamento
+const OT_KEYS = new Set(BOOKS.slice(0, OT_COUNT).map(([k]) => k));
 
 const norm = (s: string) =>
   s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 
 const displayOf = (key: string) => BOOKS.find(([k]) => k === key)?.[1] ?? key;
+
+// Botón grande de cuadrícula (libro, capítulo o versículo): fácil de tocar en la tablet.
+const gridBtn =
+  'min-h-[52px] rounded-lg border border-[#a9b9a9] font-bold text-[15px] text-center px-1 ' +
+  'hover:bg-[#eef2ea] active:bg-[#e3ebe0] transition-colors cursor-pointer';
 
 type Version = 'rv1909' | 'RVR1960' | 'PDT';
 
@@ -40,6 +48,7 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   useModalBackButton(true, onClose);
   const [bookKey, setBookKey] = useState<string | null>(null);
   const [chapter, setChapter] = useState<number | null>(null);
+  const [pickingVerse, setPickingVerse] = useState(false);
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
   const [query, setQuery] = useState('');
   const [refInput, setRefInput] = useState('');
@@ -48,12 +57,18 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const chapterCount = bookKey ? Object.keys(bible[bookKey] ?? {}).length : 0;
   const verses = bookKey && chapter ? bible[bookKey]?.[String(chapter)] : undefined;
+  const verseNumbers = useMemo(
+    () => (verses ? Object.keys(verses).map(Number).sort((a, b) => a - b) : []),
+    [verses],
+  );
 
   const filtered = useMemo(() => {
     const q = norm(query);
     if (!q) return BOOKS;
-    return BOOKS.filter(([k, d]) => k.includes(q) || norm(d).includes(q));
+    return BOOKS.filter(([k, d, a]) => k.includes(q) || norm(d).includes(q) || norm(a) === q);
   }, [query]);
+  const otBooks = filtered.filter(([k]) => OT_KEYS.has(k));
+  const ntBooks = filtered.filter(([k]) => !OT_KEYS.has(k));
 
   // Al abrir un capítulo con versículo destino, desplazarse a ese versículo.
   useEffect(() => {
@@ -63,9 +78,15 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setTargetVerse(null);
   }, [targetVerse, chapter, bookKey]);
 
-  const openBook = (key: string) => { setBookKey(key); setChapter(null); setRefError(false); };
-  const openChapter = (n: number, verse?: number) => { setChapter(n); if (verse) setTargetVerse(verse); };
-  const goBack = () => { if (chapter != null) setChapter(null); else if (bookKey) setBookKey(null); };
+  const openBook = (key: string) => { setBookKey(key); setChapter(null); setPickingVerse(false); setRefError(false); };
+  const pickChapter = (n: number) => { setChapter(n); setPickingVerse(true); };
+  const readChapter = (n: number, verse?: number) => { setChapter(n); setPickingVerse(false); setTargetVerse(verse ?? 1); };
+  const pickVerse = (v: number) => readChapter(chapter!, v);
+  const goBack = () => {
+    if (chapter != null && !pickingVerse) setPickingVerse(true);
+    else if (chapter != null) setChapter(null);
+    else if (bookKey) setBookKey(null);
+  };
 
   // Referencia directa: "Juan 3:16", "Juan 3 16", "Salmos 23", "1 Juan 2:3".
   const goToReference = () => {
@@ -77,7 +98,8 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const v = m[3] ? Number(m[3]) : null;
     if (!book || !ch || (v != null && !ch[String(v)])) { setRefError(true); return; }
     setBookKey(key);
-    openChapter(Number(m[2]), v ?? undefined);
+    if (v != null) readChapter(Number(m[2]), v);
+    else pickChapter(Number(m[2]));
     setRefInput('');
     setRefError(false);
   };
@@ -88,6 +110,15 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const onlineUrl = bookKey && chapter
     ? 'https://www.biblegateway.com/passage/?search=' + encodeURIComponent(`${displayOf(bookKey)} ${chapter}`) + `&version=${version === 'PDT' ? 'PDT' : 'RVR1960'}`
     : null;
+
+  const title =
+    chapter != null && bookKey && pickingVerse
+      ? `${displayOf(bookKey)} ${chapter} · versículo`
+      : chapter != null && bookKey
+        ? `${displayOf(bookKey)} ${chapter}`
+        : bookKey
+          ? `${displayOf(bookKey)} · capítulo`
+          : 'Biblia';
 
   return createPortal(
     <div className="fixed inset-0 z-[100] bg-black/65 flex items-center justify-center p-3 no-print" onClick={onClose}>
@@ -106,10 +137,10 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <button aria-label="Volver" onClick={goBack} className="p-2 -ml-2 shrink-0"><ChevronLeft /></button>
               )}
               <BookMarked className="shrink-0" size={20} />
-              {chapter != null && bookKey ? `${displayOf(bookKey)} ${chapter}` : bookKey ? displayOf(bookKey) : 'Biblia'}
+              {title}
             </h2>
             <p className="text-sm opacity-75">
-              {chapter != null && version !== 'rv1909'
+              {chapter != null && !pickingVerse && version !== 'rv1909'
                 ? `${version} · en línea (BibleGateway) · necesita conexión`
                 : 'Reina-Valera 1909 (dominio público) · sin conexión'}
             </p>
@@ -142,25 +173,55 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <button type="submit" className="library-control"><Search size={18} /> Ir</button>
             </form>
             {refError && <p role="alert" className="text-sm mb-3 text-[#8a3b2e]">No encontré esa referencia. Probá, por ejemplo: Juan 3:16 o Salmos 23.</p>}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {filtered.map(([key, name]) => (
-                <button key={key} onClick={() => openBook(key)} className="library-control justify-start">{name}</button>
-              ))}
-            </div>
+            <p className="text-sm opacity-70 mb-2">Elegí un libro:</p>
+            {([
+              ['Antiguo Testamento', otBooks],
+              ['Nuevo Testamento', ntBooks],
+            ] as const).map(([label, list]) =>
+              list.length > 0 && (
+                <div key={label} className="mb-4">
+                  <p className="text-xs font-bold tracking-[0.15em] uppercase opacity-60 mb-2">{label}</p>
+                  <div className="grid grid-cols-6 gap-1.5">
+                    {list.map(([key, name, abbr]) => (
+                      <button key={key} onClick={() => openBook(key)} title={name} aria-label={name} className={gridBtn}>
+                        {abbr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ),
+            )}
           </div>
         )}
 
         {bookKey && chapter == null && (
           <div className="overflow-auto p-4 sm:p-5">
-            <div className="grid grid-cols-5 sm:grid-cols-8 gap-2">
+            <p className="text-sm opacity-70 mb-2">Elegí un capítulo:</p>
+            <div className="grid grid-cols-6 gap-1.5">
               {Array.from({ length: chapterCount }, (_, i) => i + 1).map(n => (
-                <button key={n} onClick={() => openChapter(n)} className="library-control justify-center">{n}</button>
+                <button key={n} onClick={() => pickChapter(n)} aria-label={`Capítulo ${n}`} className={gridBtn}>{n}</button>
               ))}
             </div>
           </div>
         )}
 
-        {bookKey && chapter != null && verses && (
+        {bookKey && chapter != null && pickingVerse && (
+          <div className="overflow-auto p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="text-sm opacity-70">Elegí un versículo:</p>
+              <button onClick={() => readChapter(chapter, 1)} className="text-sm font-semibold underline decoration-dotted underline-offset-4 cursor-pointer">
+                Leer desde el principio
+              </button>
+            </div>
+            <div className="grid grid-cols-6 gap-1.5">
+              {verseNumbers.map(v => (
+                <button key={v} onClick={() => pickVerse(v)} aria-label={`Versículo ${v}`} className={gridBtn}>{v}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {bookKey && chapter != null && !pickingVerse && verses && (
           <>
             <div className="px-4 pt-3 flex flex-wrap gap-2 items-center text-sm font-sans">
               <span className="opacity-70 mr-1">Versión:</span>
@@ -175,13 +236,11 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
             {version === 'rv1909' ? (
               <div className="overflow-auto p-5 sm:p-6 text-[22px] leading-[1.8] font-serif">
-                {Object.entries(verses)
-                  .sort((a, b) => Number(a[0]) - Number(b[0]))
-                  .map(([v, t]) => (
-                    <p key={v} id={`biblemodal-v-${v}`} className="mb-3 scroll-mt-4">
-                      <strong className="mr-2 text-[#315b46]">{v}</strong>{t}
-                    </p>
-                  ))}
+                {verseNumbers.map(v => (
+                  <p key={v} id={`biblemodal-v-${v}`} className="mb-3 scroll-mt-4">
+                    <strong className="mr-2 text-[#315b46]">{v}</strong>{verses[String(v)]}
+                  </p>
+                ))}
                 <p className="text-base leading-snug mt-6 font-sans rounded-xl bg-[#f1e7c8] p-4">
                   Estás leyendo Reina-Valera 1909, incluida en la app: funciona sin conexión.
                   Con el selector de arriba podés consultar este mismo capítulo en RVR1960 o PDT
@@ -208,13 +267,13 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <button
                 className="library-control"
                 disabled={chapter <= 1}
-                onClick={() => openChapter(chapter - 1)}
+                onClick={() => readChapter(chapter - 1)}
                 aria-label="Capítulo anterior"
               ><ChevronLeft size={18} /> Cap. anterior</button>
               <button
                 className="library-control"
                 disabled={chapter >= chapterCount}
-                onClick={() => openChapter(chapter + 1)}
+                onClick={() => readChapter(chapter + 1)}
                 aria-label="Capítulo siguiente"
               >Cap. siguiente <ChevronRight size={18} /></button>
               {onlineUrl && (
