@@ -916,6 +916,18 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
                 >
                   {applyIdeas(splitForPassage(displayContent)[0])}
                 </ReactMarkdown>
+                {splitForPassage(displayContent)[1] && passageText && (
+                  <div className="no-print my-8 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setPassageOpen(true)}
+                      className="px-6 py-4 rounded-2xl border-2 font-sans font-bold text-lg shadow-md cursor-pointer"
+                      style={{ borderColor: '#d97706', background: 'rgba(217,119,6,0.15)', color: 'inherit' }}
+                    >
+                      📖 Leer el pasaje: {passageOrTopic}
+                    </button>
+                  </div>
+                )}
                 {/* El pasaje no ocupa pantalla (se abre desde Saltos > Pasaje),
                     pero sí aparece en la hoja impresa del púlpito. */}
                 <div className="print-only passage-print">
