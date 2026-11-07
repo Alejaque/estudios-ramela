@@ -193,6 +193,50 @@
   color: #38bdf8;
 }
 
+/* Ventana "Pasaje" del púlpito (Saltos > Pasaje): su fondo es siempre claro
+   (#fffdf8), así que el texto conserva la paleta clara aunque la app esté en
+   modo oscuro (clase .dark en <html>). Sin esto, las reglas de modo oscuro
+   pintaban el pasaje casi blanco sobre fondo blanco. */
+.passage-dialog .markdown-theology,
+.dark .passage-dialog .markdown-theology {
+  color: #334155;
+}
+.passage-dialog .markdown-theology h1,
+.dark .passage-dialog .markdown-theology h1 {
+  color: #0f172a;
+  border-bottom-color: #e2e8f0;
+}
+.passage-dialog .markdown-theology h2,
+.dark .passage-dialog .markdown-theology h2 {
+  color: #1e293b;
+  border-bottom-color: #e2e8f0;
+}
+.passage-dialog .markdown-theology h3,
+.dark .passage-dialog .markdown-theology h3 {
+  color: #0f2b48;
+  background: #f1f5f9;
+  border-left-color: #1e40af;
+}
+.passage-dialog .markdown-theology h4,
+.dark .passage-dialog .markdown-theology h4 {
+  color: #1e293b;
+}
+.passage-dialog .markdown-theology strong,
+.dark .passage-dialog .markdown-theology strong {
+  color: #0f172a;
+}
+.passage-dialog .markdown-theology blockquote,
+.dark .passage-dialog .markdown-theology blockquote {
+  border-left-color: #6366f1;
+  background-color: #f8fafc;
+  color: #475569;
+}
+.passage-dialog .markdown-theology code,
+.dark .passage-dialog .markdown-theology code {
+  background-color: #f1f5f9;
+  color: #0284c7;
+}
+
 /* Pulpit / Teleprompter Print Mode */
 /* Bloques solo para impresión (p. ej. el pasaje plegado del púlpito):
    ocultos en pantalla, visibles en la hoja impresa. */
