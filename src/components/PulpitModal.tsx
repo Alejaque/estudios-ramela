@@ -37,6 +37,7 @@ interface PulpitModalProps {
   passageOrTopic: string;
   translation?: string;
   content: string;
+  hookEmphasis?: boolean;
 }
 
 type PulpitTheme = 'dark-oled' | 'sepia' | 'light' | 'midnight';
@@ -66,6 +67,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   passageOrTopic,
   translation,
   content,
+  hookEmphasis,
 }) => {
   const [fontSize, setFontSize] = useState<number>(() =>
     typeof window !== 'undefined' && window.innerWidth <= 1024 ? 24 : 22
@@ -812,7 +814,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
           {/* Text with dynamic font size */}
           <div
-            className="pulpit-markdown markdown-theology prose max-w-none font-theology-serif"
+            className={`pulpit-markdown markdown-theology prose max-w-none font-theology-serif${hookEmphasis ? ' hook-emphasis' : ''}`}
             style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
           >
             {viewMode === 'summary' ? (
