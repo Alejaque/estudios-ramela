@@ -26,10 +26,12 @@ import {
   LocateFixed,
 } from 'lucide-react';
 import { exportStudyToPdf } from '../utils/pdfExport';
+import { contentWithPassage, splitForPassage } from '../utils/passageFold';
 import { ensureOutlineTransition } from '../utils/outlineTransition';
 import { buildPulpitSummary, highlightKeyIdeas } from '../utils/pulpitSummary';
 import { useModalBackButton } from '../hooks/useModalBackButton';
 import { BibleVerseModal } from './BibleVerseModal';
+import { BibleModal } from './BibleModal';
 
 interface PulpitModalProps {
   isOpen: boolean;
@@ -39,6 +41,8 @@ interface PulpitModalProps {
   content: string;
   hookEmphasis?: boolean;
   studyId?: string;
+  /** Texto del pasaje plegado: se abre desde Saltos > Pasaje sin ocupar pantalla. */
+  passageText?: string;
 }
 
 type PulpitTheme = 'dark-oled' | 'sepia' | 'light' | 'midnight';
@@ -70,6 +74,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   content,
   hookEmphasis,
   studyId,
+  passageText,
 }) => {
   const [fontSize, setFontSize] = useState<number>(() =>
     hookEmphasis && studyId
@@ -126,6 +131,11 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   const [vistaOpen, setVistaOpen] = useState<boolean>(false);
   const [temaOpen, setTemaOpen] = useState<boolean>(false);
   const [personalNote, setPersonalNote] = useState<string>('');
+  // Pasaje plegado: se abre desde Saltos > Pasaje; arranca cerrado y se
+  // reinicia al cambiar de estudio o reabrir el púlpito.
+  const [passageOpen, setPassageOpen] = useState<boolean>(false);
+  const [bibleOpen, setBibleOpen] = useState(false);
+  useEffect(() => { setPassageOpen(false); }, [isOpen, studyId]);
   const [verseRef, setVerseRef] = useState<string | null>(null);
 
   // Preaching Timer / Stopwatch
@@ -381,6 +391,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   // en estudios sin contexto (p. ej. Juan 6) el boton quedaria inerte.
   const hasContextoSection = /(^|\n)#{1,6}\s+[^\n]*contexto/i.test(displayContent);
   const readingContent = highlightIdeas ? highlightKeyIdeas(displayContent) : displayContent;
+  const applyIdeas = (text: string) => (highlightIdeas ? highlightKeyIdeas(text) : text);
   const pulpitSummary = viewMode === 'summary' ? buildPulpitSummary(displayContent) : null;
 
   const handlePrint = () => window.print();
@@ -389,7 +400,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     exportStudyToPdf({
       passageOrTopic,
       translation,
-      content: displayContent,
+      content: contentWithPassage(displayContent, passageText),
       personalNotes: personalNote,
     });
   };
@@ -530,12 +541,55 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
 
 
   return (
-    <div data-pulpit-theme={theme} className={`pulpit-view fixed inset-0 w-screen h-dvh z-50 flex flex-col font-theology-serif select-none ${themeClasses}`}>
+    <div data-pulpit-theme={theme} className={`pulpit-view${passageText ? ' print-with-passage' : ''} fixed inset-0 w-screen h-dvh z-50 flex flex-col font-theology-serif select-none ${themeClasses}`}>
       {verseRef && (
         <BibleVerseModal
           reference={verseRef}
           onClose={() => setVerseRef(null)}
         />
+      )}
+      {bibleOpen && <BibleModal onClose={() => setBibleOpen(false)} />}
+
+      {passageOpen && passageText && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/70 flex items-center justify-center p-3 no-print"
+          onClick={() => setPassageOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Pasaje ${passageOrTopic}`}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { if (e.key === 'Escape') setPassageOpen(false); }}
+            className="bg-[#fffdf8] text-[#24352c] w-full max-w-2xl max-h-[85dvh] rounded-2xl flex flex-col overflow-hidden"
+          >
+            <div className="p-4 border-b border-[#d8c98a] flex justify-between items-center gap-3">
+              <h2 className="text-lg font-bold font-theology-serif">
+                Pasaje · {passageOrTopic}{translation ? ` (${translation})` : ''}
+              </h2>
+              <button
+                type="button"
+                aria-label="Cerrar pasaje"
+                onClick={() => setPassageOpen(false)}
+                className="p-2 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div
+              className="overflow-auto p-6 markdown-theology prose max-w-none font-theology-serif"
+              style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
+            >
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                urlTransform={bibleUrlTransform}
+                components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
+              >
+                {passageText}
+              </ReactMarkdown>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Top Preaching Control Bar */}
@@ -776,8 +830,10 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         <>
         {[
           ...(hasContextoSection ? [['Contexto','Contexto'] as [string,string]] : []),
-          ['Introducción','Introducción'],['Proposición','Proposición'],['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración']
-        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
+          ['Introducción','Introducción'],['Proposición','Proposición'],
+          ...(passageText ? [['Pasaje','Pasaje'] as [string,string]] : []),
+          ['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración'],['Biblia','Biblia']
+        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='Pasaje'?setPassageOpen(true):target==='Biblia'?setBibleOpen(true):target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
         {personalNote && (
           <button
             type="button"
@@ -848,6 +904,36 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
                   Completo.
                 </p>
               )
+            ) : passageText ? (
+              <>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                  urlTransform={bibleUrlTransform}
+                  components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
+                >
+                  {applyIdeas(splitForPassage(displayContent)[0])}
+                </ReactMarkdown>
+                {/* El pasaje no ocupa pantalla (se abre desde Saltos > Pasaje),
+                    pero sí aparece en la hoja impresa del púlpito. */}
+                <div className="print-only passage-print">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                    urlTransform={bibleUrlTransform}
+                    components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
+                  >
+                    {applyIdeas(passageText)}
+                  </ReactMarkdown>
+                </div>
+                {splitForPassage(displayContent)[1] && (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                    urlTransform={bibleUrlTransform}
+                    components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
+                  >
+                    {applyIdeas(splitForPassage(displayContent)[1])}
+                  </ReactMarkdown>
+                )}
+              </>
             ) : (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
