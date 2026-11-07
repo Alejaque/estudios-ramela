@@ -564,7 +564,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             aria-label={`Pasaje ${passageOrTopic}`}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => { if (e.key === 'Escape') setPassageOpen(false); }}
-            className="bg-[#fffdf8] text-[#24352c] w-full max-w-2xl max-h-[85dvh] rounded-2xl flex flex-col overflow-hidden"
+            className="passage-dialog bg-[#fffdf8] text-[#24352c] w-full max-w-2xl max-h-[85dvh] rounded-2xl flex flex-col overflow-hidden"
           >
             <div className="p-4 border-b border-[#d8c98a] flex justify-between items-center gap-3">
               <h2 className="text-lg font-bold font-theology-serif">
