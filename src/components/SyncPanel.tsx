@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  SyncState, Conflict, TrashEntry, loadSyncState, clearSyncState, activateSpace,
-  createSpace, redeemCode, createPairCode, listConflicts, resolveConflict, syncNow,
+  SyncState, Conflict, TrashEntry, DeviceInfo, loadSyncState, clearSyncState, activateSpace,
+  createSpace, redeemCode, recoverWithPhrase, createPairCode, listConflicts, resolveConflict, syncNow,
+  listDevices, revokeDevice, promoteDevice, rotatePhrase,
   applyRemoteItem, loadTrash, addToTrash, removeFromTrash, itemLabel, itemPreview,
 } from '../sync';
 
@@ -13,10 +14,13 @@ export function SyncPanel({ onSynced }: { onSynced?: () => void }) {
   const [st, setSt] = useState<SyncState | null>(() => loadSyncState());
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
-  const [flow, setFlow] = useState<'none' | 'main' | 'code'>('none');
+  const [flow, setFlow] = useState<'none' | 'main' | 'code' | 'phrase'>('none');
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
+  const [phrase, setPhrase] = useState('');
   const [recovery, setRecovery] = useState('');
+  const [devices, setDevices] = useState<DeviceInfo[]>([]);
+  const [showDevices, setShowDevices] = useState(false);
   const [pairCode, setPairCode] = useState<{ code: string; expires_at: string } | null>(null);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [trash, setTrash] = useState<TrashEntry[]>(() => loadTrash());
@@ -73,6 +77,55 @@ export function SyncPanel({ onSynced }: { onSynced?: () => void }) {
     busyRef.current = false; // idem: destrabar la primera sincronización
     doSync(s);
   }
+  async function doRecover() {
+    if (!phrase.trim() || !name.trim() || busy) return;
+    setBusy(true); setMsg('');
+    const r = await recoverWithPhrase(phrase.trim(), name.trim());
+    setBusy(false);
+    if (r.status !== 201 || !r.json.device_key) { setMsg(r.json.error || 'Frase incorrecta'); return; }
+    const s = activateSpace(r.json.space_id, r.json.device_id, r.json.device_key, name.trim(), !!r.json.is_primary);
+    setSt(s); setFlow('none'); setPhrase('');
+    setMsg(r.json.is_primary
+      ? 'Recuperado. Este dispositivo quedó como principal. Si perdiste un aparato, abrí "Dispositivos vinculados" y desvinculalo: hasta que lo hagas, ese aparato sigue con acceso.'
+      : 'Recuperado. Este dispositivo ya está vinculado. Si perdiste un aparato, pedile al dispositivo principal que lo desvincule.');
+    busyRef.current = false; // destrabar la primera sincronización
+    doSync(s);
+  }
+  async function refreshDevices(s: SyncState) {
+    try { const r = await listDevices(s); if (r.json.devices) setDevices(r.json.devices); } catch { /* sin conexión */ }
+  }
+  async function doRevoke(d: DeviceInfo) {
+    if (!st || busy) return;
+    if (!confirm(`¿Desvincular "${d.name}"? Ese dispositivo deja de sincronizar; sus estudios quedan guardados en ese aparato.`)) return;
+    setBusy(true);
+    const r = await revokeDevice(st, d.id);
+    setBusy(false);
+    if (!r.json.ok) { setMsg(r.json.error || 'No se pudo desvincular'); return; }
+    setMsg(`"${d.name}" desvinculado.`);
+    refreshDevices(st);
+  }
+  async function doPromote(d: DeviceInfo) {
+    if (!st || busy) return;
+    if (!confirm(`¿Hacer principal a "${d.name}"? Este dispositivo deja de ser el principal.`)) return;
+    setBusy(true);
+    const r = await promoteDevice(st, d.id);
+    setBusy(false);
+    if (!r.json.ok) { setMsg(r.json.error || 'No se pudo promover'); return; }
+    const s = { ...st, is_primary: false };
+    setSt(s);
+    try { localStorage.setItem('er_sync_state', JSON.stringify(s)); } catch { /* sin espacio */ }
+    setMsg(`"${d.name}" ahora es el principal.`);
+    refreshDevices(s);
+  }
+  async function doRotate() {
+    if (!st || busy) return;
+    if (!confirm('¿Generar una frase de recuperación nueva? La frase vieja deja de servir. Anotá la nueva en papel.')) return;
+    setBusy(true);
+    const r = await rotatePhrase(st);
+    setBusy(false);
+    if (!r.json.recovery_phrase) { setMsg(r.json.error || 'No se pudo generar'); return; }
+    setRecovery(r.json.recovery_phrase);
+  }
   async function doPair() {
     if (!st || busy) return;
     setBusy(true);
@@ -126,6 +179,7 @@ export function SyncPanel({ onSynced }: { onSynced?: () => void }) {
           <div className="flex flex-col gap-3">
             <button className="library-control" onClick={() => setFlow('main')}>Empezar en este dispositivo (soy el principal)</button>
             <button className="library-control" onClick={() => setFlow('code')}>Tengo un código de otro dispositivo</button>
+            <button className="library-control" onClick={() => setFlow('phrase')}>Recuperar con mi frase (perdí mis dispositivos)</button>
           </div>
         )}
         {flow !== 'none' && (
@@ -138,7 +192,12 @@ export function SyncPanel({ onSynced }: { onSynced?: () => void }) {
                 <input className="library-control" placeholder="Ej.: AB12CD" value={code} onChange={e => setCode(e.target.value.toUpperCase())} />
               </label>
             )}
-            <button className="library-control" disabled={busy} onClick={flow === 'main' ? doCreate : doRedeem}>
+            {flow === 'phrase' && (
+              <label className="flex flex-col gap-1">Frase de recuperación (la que anotaste en papel)
+                <input className="library-control" placeholder="Ej.: ABCD-EFGH-JKMN-PQRS" value={phrase} onChange={e => setPhrase(e.target.value.toUpperCase())} />
+              </label>
+            )}
+            <button className="library-control" disabled={busy} onClick={flow === 'main' ? doCreate : flow === 'code' ? doRedeem : doRecover}>
               {busy ? 'Vinculando…' : 'Vincular'}
             </button>
             <button className="library-control" onClick={() => { setFlow('none'); setMsg(''); }}>Volver</button>
@@ -166,8 +225,30 @@ export function SyncPanel({ onSynced }: { onSynced?: () => void }) {
         {st.is_primary && (
           <button className="library-control" disabled={busy} onClick={doPair}>Generar código para vincular otro dispositivo</button>
         )}
+        <button className="library-control" onClick={() => { const nv = !showDevices; setShowDevices(nv); if (nv && st) refreshDevices(st); }}>
+          Dispositivos vinculados{showDevices ? ' — ocultar' : ''}
+        </button>
+        {st.is_primary && (
+          <button className="library-control" disabled={busy} onClick={doRotate}>Generar una frase de recuperación nueva</button>
+        )}
         <button className="library-control" onClick={unlink}>Desvincular este dispositivo</button>
       </div>
+      {showDevices && (
+        <div className="mt-3 rounded border p-3">
+          <p className="mb-2 text-xs opacity-75">Aparatos con acceso a tu sincronización. Si perdiste uno, desvinculalo acá: deja de sincronizar al instante. "Hacer principal" solo cambia quién genera códigos; no quita el acceso.</p>
+          {devices.filter(d => !d.revoked).map(d => (
+            <div key={d.id} className="mb-2 rounded border p-2">
+              <p className="font-semibold">{d.name}{d.id === st.device_id ? ' (este dispositivo)' : ''}{d.is_primary ? ' · principal' : ''}</p>
+              {st.is_primary && d.id !== st.device_id && (
+                <div className="mt-1 flex gap-2">
+                  {!d.is_primary && <button className="library-control" disabled={busy} onClick={() => doPromote(d)}>Hacer principal</button>}
+                  <button className="library-control" disabled={busy} onClick={() => doRevoke(d)}>Desvincular</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
       {pairCode && (
         <div className="mt-3 rounded border border-green-600 p-3">
           <p className="font-semibold">Código para el otro dispositivo (dura 10 minutos, se usa una sola vez):</p>
