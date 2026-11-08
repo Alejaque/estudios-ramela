@@ -5,7 +5,7 @@
 // Nada se pisa sin decisión del usuario: lo divergente queda como conflicto y la versión descartada
 // se guarda en "Versiones descartadas" (er_sync_trash), recuperable y parte de la copia de seguridad.
 
-const API = 'https://estudios-ramela-sync.ramelafutbol.workers.dev';
+const API = (location.hostname === 'localhost' ? 'http://localhost:8788' : 'https://estudios-ramela-sync.ramelafutbol.workers.dev');
 
 export type SyncState = {
   space_id: string;
@@ -132,6 +132,23 @@ export async function redeemCode(code: string, deviceName: string) {
   return call<{ space_id: string; device_id: string; device_key: string; error?: string }>(
     '/pair-codes/redeem', { method: 'POST', body: JSON.stringify({ code, device_name: deviceName }) });
 }
+export async function recoverWithPhrase(phrase: string, deviceName: string) {
+  return call<{ space_id: string; device_id: string; device_key: string; is_primary?: boolean; error?: string }>(
+    '/recovery', { method: 'POST', body: JSON.stringify({ phrase, device_name: deviceName }) });
+}
+export type DeviceInfo = { id: string; name: string; is_primary: number; created_at: string; revoked: number };
+export async function listDevices(st: SyncState) {
+  return call<{ devices: DeviceInfo[] }>(`/spaces/${st.space_id}/devices`, {}, st.device_key);
+}
+export async function revokeDevice(st: SyncState, deviceId: string) {
+  return call<{ ok?: boolean; error?: string }>(`/spaces/${st.space_id}/devices/${deviceId}`, { method: 'DELETE' }, st.device_key);
+}
+export async function promoteDevice(st: SyncState, deviceId: string) {
+  return call<{ ok?: boolean; error?: string }>(`/spaces/${st.space_id}/devices/${deviceId}/promote`, { method: 'POST', body: '{}' }, st.device_key);
+}
+export async function rotatePhrase(st: SyncState) {
+  return call<{ recovery_phrase?: string; error?: string }>(`/spaces/${st.space_id}/recovery-phrase`, { method: 'POST', body: '{}' }, st.device_key);
+}
 export async function createPairCode(st: SyncState) {
   return call<{ code: string; expires_at: string; error?: string }>(
     `/spaces/${st.space_id}/pair-codes`, { method: 'POST' }, st.device_key);
@@ -202,7 +219,7 @@ export async function syncNow(st: SyncState): Promise<{ ok: boolean; msg: string
       if (push.status === 401) return { ok: false, msg: 'Este dispositivo fue desvinculado. Volvé a vincularlo.', state: st, conflicts: 0 };
       if (push.status !== 200) return { ok: false, msg: 'No se pudo subir. Probá de nuevo en un rato.', state: st, conflicts: 0 };
     }
-    const pull = await call<{ items?: { collection: string; key: string; value: string; rev: number; deleted: number }[]; rev?: number; error?: string }>(
+    const pull = await call<{ items?: { collection: string; key: string; value: string; rev: number; deleted: number }[]; rev?: number; me?: { is_primary: boolean }; error?: string }>(
       `/spaces/${st.space_id}/items?since=${st.last_rev}`, {}, st.device_key);
     if (pull.status !== 200) return { ok: false, msg: 'No se pudo bajar. Probá de nuevo en un rato.', state: st, conflicts: 0 };
     const pushedKeys = new Set([...changed.map(c => c.collection + '|' + c.key), ...deleted.map(d => d.collection + '|' + d.key)]);
@@ -223,7 +240,9 @@ export async function syncNow(st: SyncState): Promise<{ ok: boolean; msg: string
     const after = collectLocalItems();
     const hashes: Record<string, string> = {};
     for (const it of after) hashes[it.collection + '|' + it.key] = hash(it.value);
-    const next: SyncState = { ...st, last_rev: pull.json.rev ?? st.last_rev, hashes };
+    // Si la nube dice que este dispositivo dejó de ser principal (recuperación o promoción
+    // desde otro aparato), la pantalla se actualiza sola en esta sincronización.
+    const next: SyncState = { ...st, last_rev: pull.json.rev ?? st.last_rev, hashes, is_primary: pull.json.me ? pull.json.me.is_primary : st.is_primary };
     saveSyncState(next);
     const cf = await listConflicts(next);
     return { ok: true, msg: 'Sincronizado', state: next, conflicts: (cf.json.conflicts || []).length };
