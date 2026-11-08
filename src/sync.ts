@@ -73,6 +73,10 @@ export function collectLocalItems(): LocalItem[] {
   for (const d of imported) items.push({ collection: 'reviewed_library_imports', key: d.id, value: JSON.stringify(d), updated_at: d.createdAt });
   const personal = readJSON<{ id: string; updatedAt?: string; createdAt?: string }[]>('personal_studies', []);
   for (const p of personal) items.push({ collection: 'personal_studies', key: p.id, value: JSON.stringify(p), updated_at: p.updatedAt || p.createdAt });
+  // Guardados anteriores (legado, clave biblical_studies_saved): estudios completos guardados por el usuario
+  // en versiones viejas de la app. Siguen abriéndose desde "Guardados anteriores"; también se sincronizan.
+  const savedLegacy = readJSON<{ id: string; createdAt?: string }[]>('biblical_studies_saved', []);
+  for (const s of savedLegacy) items.push({ collection: 'biblical_studies_saved', key: s.id, value: JSON.stringify(s), updated_at: s.createdAt });
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i)!;
     if (k.startsWith('biblical_notes_')) items.push({ collection: 'biblical_notes', key: k, value: localStorage.getItem(k) || '' });
@@ -87,7 +91,7 @@ export function applyRemoteItem(collection: string, key: string, value: string) 
   if (collection === 'study_edits') {
     const m = readJSON<Record<string, unknown>>('study_edits', {}); m[key] = JSON.parse(value);
     localStorage.setItem('study_edits', JSON.stringify(m));
-  } else if (collection === 'biblical_drafts' || collection === 'reviewed_library_imports' || collection === 'personal_studies') {
+  } else if (collection === 'biblical_drafts' || collection === 'reviewed_library_imports' || collection === 'personal_studies' || collection === 'biblical_studies_saved') {
     const lsKey = collection;
     const arr = readJSON<{ id: string }[]>(lsKey, []);
     const obj = JSON.parse(value);
@@ -106,7 +110,7 @@ export function applyRemoteDelete(collection: string, key: string) {
   if (collection === 'study_edits') {
     const m = readJSON<Record<string, unknown>>('study_edits', {});
     if (key in m) { delete m[key]; localStorage.setItem('study_edits', JSON.stringify(m)); }
-  } else if (collection === 'biblical_drafts' || collection === 'reviewed_library_imports' || collection === 'personal_studies') {
+  } else if (collection === 'biblical_drafts' || collection === 'reviewed_library_imports' || collection === 'personal_studies' || collection === 'biblical_studies_saved') {
     const arr = readJSON<{ id: string }[]>(collection, []);
     localStorage.setItem(collection, JSON.stringify(arr.filter(x => x.id !== key)));
   } else if (collection === 'biblical_notes') {
@@ -168,6 +172,10 @@ export function activateSpace(spaceId: string, deviceId: string, deviceKey: stri
 // Etiqueta legible de un ítem para mostrar en conflictos y papelera.
 export function itemLabel(collection: string, key: string, value?: string): string {
   if (collection === 'biblical_notes') return 'Nota de ' + key.replace('biblical_notes_', '');
+  if (collection === 'biblical_studies_saved') {
+    try { const o = JSON.parse(value || ''); if (o && typeof o.passageOrTopic === 'string' && o.passageOrTopic) return 'Guardado anterior: ' + o.passageOrTopic; } catch { /* sin detalle */ }
+    return 'Estudio guardado anterior';
+  }
   if (value) {
     try { const o = JSON.parse(value); if (o && typeof o.title === 'string' && o.title) return o.title; } catch { /* texto plano */ }
   }
