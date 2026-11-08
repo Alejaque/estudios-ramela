@@ -1,6 +1,9 @@
 // Cliente de sincronización entre dispositivos (tablet, celular, PC).
 // Servicio propio: estudios-ramela-sync.ramelafutbol.workers.dev (cuenta Cloudflare del usuario, plan gratis).
 // Local primero: todo sigue guardándose en este dispositivo; la nube replica. Sin señal, la app funciona igual.
+// Los ítems son individuales (un estudio, una nota, un borrador): un conflicto en uno nunca toca a los demás.
+// Nada se pisa sin decisión del usuario: lo divergente queda como conflicto y la versión descartada
+// se guarda en "Versiones descartadas" (er_sync_trash), recuperable y parte de la copia de seguridad.
 
 const API = 'https://estudios-ramela-sync.ramelafutbol.workers.dev';
 
@@ -16,17 +19,36 @@ export type SyncState = {
 
 export type Conflict = {
   id: string; collection: string; key: string;
-  server_value: string; client_value: string;
-  server_device: string; client_device: string; created_at: string;
+  server_value: string; client_value: string; client_deleted?: number;
+  server_device_name?: string; client_device_name?: string; created_at: string;
+};
+
+export type TrashEntry = {
+  collection: string; key: string; value: string; discarded_at: string; reason: string;
 };
 
 const STATE_KEY = 'er_sync_state';
+const TRASH_KEY = 'er_sync_trash';
 
 export function loadSyncState(): SyncState | null {
   try { const raw = localStorage.getItem(STATE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
 function saveSyncState(s: SyncState) { localStorage.setItem(STATE_KEY, JSON.stringify(s)); }
 export function clearSyncState() { localStorage.removeItem(STATE_KEY); }
+
+// Papelera de versiones descartadas al resolver conflictos. Recuperable, se incluye en la copia de seguridad.
+export function loadTrash(): TrashEntry[] {
+  try { const raw = localStorage.getItem(TRASH_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
+export function addToTrash(e: TrashEntry) {
+  const t = loadTrash();
+  t.unshift(e);
+  try { localStorage.setItem(TRASH_KEY, JSON.stringify(t.slice(0, 100))); } catch { /* espacio lleno: se conservan las más nuevas */ }
+}
+export function removeFromTrash(idx: number) {
+  const t = loadTrash(); t.splice(idx, 1);
+  localStorage.setItem(TRASH_KEY, JSON.stringify(t));
+}
 
 // Hash simple y estable para detectar cambios locales.
 function hash(s: string): string {
@@ -40,7 +62,7 @@ function readJSON<T>(k: string, fallback: T): T {
   try { const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; }
 }
 
-// Junta el contenido propio del usuario guardado en este dispositivo.
+// Junta el contenido propio del usuario guardado en este dispositivo (ítem por ítem).
 export function collectLocalItems(): LocalItem[] {
   const items: LocalItem[] = [];
   const edits = readJSON<Record<string, { editedAt?: string }>>('study_edits', {});
@@ -79,6 +101,21 @@ export function applyRemoteItem(collection: string, key: string, value: string) 
   }
 }
 
+// Quita un ítem local porque otro dispositivo lo borró (lápida recibida de la nube).
+export function applyRemoteDelete(collection: string, key: string) {
+  if (collection === 'study_edits') {
+    const m = readJSON<Record<string, unknown>>('study_edits', {});
+    if (key in m) { delete m[key]; localStorage.setItem('study_edits', JSON.stringify(m)); }
+  } else if (collection === 'biblical_drafts' || collection === 'reviewed_library_imports' || collection === 'personal_studies') {
+    const arr = readJSON<{ id: string }[]>(collection, []);
+    localStorage.setItem(collection, JSON.stringify(arr.filter(x => x.id !== key)));
+  } else if (collection === 'biblical_notes') {
+    localStorage.removeItem(key);
+  } else if (collection === 'meta' && key === 'avatar') {
+    localStorage.removeItem('alejandro_ramela_custom_avatar');
+  }
+}
+
 async function call<T>(path: string, opts: RequestInit = {}, key?: string): Promise<{ status: number; json: T }> {
   const res = await fetch(API + path, {
     ...opts,
@@ -103,7 +140,7 @@ export async function listConflicts(st: SyncState) {
   return call<{ conflicts: Conflict[] }>(`/spaces/${st.space_id}/conflicts`, {}, st.device_key);
 }
 export async function resolveConflict(st: SyncState, id: string, action: 'keep_mine' | 'keep_server') {
-  return call<{ ok: boolean }>(`/spaces/${st.space_id}/conflicts/${id}?action=${action}`, { method: 'POST', body: '{}' }, st.device_key);
+  return call<{ ok: boolean; server_deleted?: number }>(`/spaces/${st.space_id}/conflicts/${id}?action=${action}`, { method: 'POST', body: '{}' }, st.device_key);
 }
 export function activateSpace(spaceId: string, deviceId: string, deviceKey: string, deviceName: string, isPrimary: boolean): SyncState {
   const st: SyncState = { space_id: spaceId, device_id: deviceId, device_key: deviceKey, device_name: deviceName, is_primary: isPrimary, last_rev: 0, hashes: {} };
@@ -111,30 +148,76 @@ export function activateSpace(spaceId: string, deviceId: string, deviceKey: stri
   return st;
 }
 
-// Sincroniza: sube lo que cambió en este dispositivo y baja lo que cambió en otros.
-// Nunca pisa: lo que diverge queda como conflicto para que el usuario decida.
+// Etiqueta legible de un ítem para mostrar en conflictos y papelera.
+export function itemLabel(collection: string, key: string, value?: string): string {
+  if (collection === 'biblical_notes') return 'Nota de ' + key.replace('biblical_notes_', '');
+  if (value) {
+    try { const o = JSON.parse(value); if (o && typeof o.title === 'string' && o.title) return o.title; } catch { /* texto plano */ }
+  }
+  if (collection === 'study_edits') return 'Estudio editado';
+  if (collection === 'personal_studies') return 'Estudio personal';
+  if (collection === 'biblical_drafts') return 'Borrador';
+  if (collection === 'reviewed_library_imports') return 'Estudio importado';
+  if (collection === 'meta') return 'Imagen de perfil';
+  return collection + ': ' + key;
+}
+
+// Resumen legible del contenido de un ítem para la comparación de versiones.
+export function itemPreview(collection: string, value: string): { title: string; body: string; when: string } {
+  let title = '', body = value, when = '';
+  try {
+    const o = JSON.parse(value);
+    if (o && typeof o === 'object') {
+      title = typeof o.title === 'string' ? o.title : '';
+      body = typeof o.content === 'string' ? o.content : JSON.stringify(o, null, 1);
+      when = (o.editedAt || o.updatedAt || o.createdAt || '') as string;
+    }
+  } catch { /* valor de texto plano (nota) */ }
+  return { title, body, when };
+}
+
+// Sincroniza: sube lo que cambió (o se borró) en este dispositivo y baja lo que cambió en otros.
+// Nunca pisa: lo que diverge queda como conflicto por ítem para que el usuario decida.
 export async function syncNow(st: SyncState): Promise<{ ok: boolean; msg: string; state: SyncState; conflicts: number }> {
   try {
     const local = collectLocalItems();
     // No re-subir ítems con conflicto pendiente: el usuario decide primero (evita conflictos duplicados).
     const pending = await listConflicts(st);
+    if (pending.status === 401) return { ok: false, msg: 'Este dispositivo fue desvinculado. Volvé a vincularlo.', state: st, conflicts: 0 };
     const pendingKeys = new Set((pending.json.conflicts || []).map(cf => cf.collection + '|' + cf.key));
+
+    const localKeys = new Set(local.map(it => it.collection + '|' + it.key));
+    // Cambios: ítems locales cuyo contenido difiere de la última sincronización.
     const changed = local.filter(it => st.hashes[it.collection + '|' + it.key] !== hash(it.value) && !pendingKeys.has(it.collection + '|' + it.key));
-    if (changed.length) {
+    // Borrados locales: ítems que estaban sincronizados y ya no están en este dispositivo.
+    const deleted = Object.keys(st.hashes)
+      .filter(k => !localKeys.has(k) && !pendingKeys.has(k))
+      .map(k => { const [collection, ...rest] = k.split('|'); return { collection, key: rest.join('|'), deleted: true as const }; });
+
+    if (changed.length || deleted.length) {
       const push = await call<{ applied?: { collection: string; key: string }[]; conflicts?: unknown[]; error?: string }>(
         `/spaces/${st.space_id}/items`,
-        { method: 'POST', body: JSON.stringify({ changes: changed.map(c => ({ ...c, base_rev: st.last_rev })) }) },
+        { method: 'POST', body: JSON.stringify({ changes: [...changed.map(c => ({ ...c, base_rev: st.last_rev })), ...deleted.map(d => ({ ...d, base_rev: st.last_rev }))] }) },
         st.device_key);
       if (push.status === 401) return { ok: false, msg: 'Este dispositivo fue desvinculado. Volvé a vincularlo.', state: st, conflicts: 0 };
       if (push.status !== 200) return { ok: false, msg: 'No se pudo subir. Probá de nuevo en un rato.', state: st, conflicts: 0 };
     }
-    const pull = await call<{ items?: { collection: string; key: string; value: string; rev: number }[]; rev?: number; error?: string }>(
+    const pull = await call<{ items?: { collection: string; key: string; value: string; rev: number; deleted: number }[]; rev?: number; error?: string }>(
       `/spaces/${st.space_id}/items?since=${st.last_rev}`, {}, st.device_key);
     if (pull.status !== 200) return { ok: false, msg: 'No se pudo bajar. Probá de nuevo en un rato.', state: st, conflicts: 0 };
-    const pushedKeys = new Set(changed.map(c => c.collection + '|' + c.key));
+    const pushedKeys = new Set([...changed.map(c => c.collection + '|' + c.key), ...deleted.map(d => d.collection + '|' + d.key)]);
     for (const it of pull.json.items || []) {
-      // Si este dispositivo también cambió ese ítem, su versión local ya está arriba o en conflicto: no tocar.
+      // Si este dispositivo también tocó ese ítem, su versión local ya está arriba o en conflicto: no tocar.
       if (pushedKeys.has(it.collection + '|' + it.key)) continue;
+      if (pendingKeys.has(it.collection + '|' + it.key)) continue;
+      if (it.deleted) {
+        // Otro dispositivo lo borró. Si acá no cambió desde la última sincronización, se borra también;
+        // si cambió, queda intacto y el próximo envío generará un conflicto para que el usuario decida.
+        const localIt = local.find(x => x.collection === it.collection && x.key === it.key);
+        if (!localIt) continue;
+        if (st.hashes[it.collection + '|' + it.key] === hash(localIt.value)) applyRemoteDelete(it.collection, it.key);
+        continue;
+      }
       applyRemoteItem(it.collection, it.key, it.value);
     }
     const after = collectLocalItems();
