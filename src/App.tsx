@@ -14,6 +14,7 @@ import { splitForPassage, contentWithPassage, hideLegacyPassageSection } from '.
 import type { SavedStudy } from './types';
 import { StudyEditor } from './components/StudyEditor';
 import { SyncPanel } from './components/SyncPanel';
+import { PersonalBiblePanel } from './components/PersonalBiblePanel';
 import { setAppBusy } from './utils/appBusy';
 type Edit={title:string;content:string;editedAt:string;passageText?:string;passageLabel?:string;previous:{title:string;content:string;editedAt:string;passageText?:string;passageLabel?:string}[]};
 
@@ -102,6 +103,7 @@ const library=(isDraft?drafts:[COR2_BREVE,JUAN2,JUAN2_BREVE,TES_15MIN,TES,TES_BR
  {!visible.length&&<p className="py-4">{isDraft?'Todavía no hay borradores con esa búsqueda.':'No hay estudios con esa búsqueda.'}</p>}
  </>}
  {!isDraft&&<details className="mt-5 text-sm"><summary className="cursor-pointer py-3">Agregar un estudio</summary><p className="mb-3 opacity-75">Importá el archivo JSON del estudio preparado para tu biblioteca.</p><input aria-label="Importar estudio JSON" type="file" accept="application/json,.json" onChange={e=>{if(e.target.files?.[0])importStudies(e.target.files[0]);}}/>{importError&&<p className="mt-2">{importError}</p>}</details>}
+ {!isDraft&&<PersonalBiblePanel/>}
  <details className="mt-5 text-sm"><summary className="cursor-pointer py-3">Copia de seguridad de mis ediciones</summary><p className="mb-3 opacity-75">Tus ediciones, borradores, notas y guardados anteriores se guardan primero en este dispositivo. Guardá una copia en un archivo para no perder nada; también sirve para pasar todo a otro equipo. Si este equipo está vinculado en 'Sincronización entre dispositivos', además todo esto se copia solo a tus otros equipos vinculados cuando hay internet.</p><div className="flex flex-col gap-3"><button className="library-control" onClick={exportBackup}>Guardar copia en un archivo</button><label className="library-control cursor-pointer">Restaurar desde un archivo<input aria-label="Restaurar copia" className="hidden" type="file" accept="application/json,.json" onChange={e=>{if(e.target.files?.[0])importBackup(e.target.files[0]);e.target.value='';}}/></label></div>{backupMsg&&<p role="status" className="mt-2">{backupMsg}</p>}</details>
 <SyncPanel onSynced={()=>{try{setEdits(JSON.parse(localStorage.getItem('study_edits')||'{}'));}catch{}try{setDrafts(JSON.parse(localStorage.getItem('biblical_drafts')||'[]'));}catch{}try{setImported(JSON.parse(localStorage.getItem('reviewed_library_imports')||'[]'));}catch{}}}/>
  {previous.length>0&&<button className="mt-4 underline text-sm py-3" onClick={()=>setArchive(true)}>Guardados anteriores ({previous.length})</button>}
@@ -136,4 +138,4 @@ const library=(isDraft?drafts:[COR2_BREVE,JUAN2,JUAN2_BREVE,TES_15MIN,TES,TES_BR
  {archive&&<div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl p-6 w-full max-w-xl max-h-[85dvh] overflow-auto"><div className="flex justify-between items-center mb-4"><h2 className="font-serif text-2xl">Guardados anteriores</h2><button aria-label="Cerrar guardados" onClick={()=>setArchive(false)} className="p-3"><X/></button></div>{previous.map(s=><button key={s.id} onClick={()=>load(s)} className="block w-full text-left p-4 border-b"><strong>{s.passageOrTopic}</strong><span className="block">{s.title}</span></button>)}</div></div>}
  <PulpitModal studyId={study.id} hookEmphasis={study.id==='2co-5-17-21-breve-20261106'} isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={(currentIsDraft?'# Borrador\n\n':'')+shownContent} passageText={study.passageText} passageLabel={study.passageLabel}/>
  </div></div>;
-}
+  }
