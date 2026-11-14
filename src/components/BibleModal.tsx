@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, ExternalLink, BookMarked, Search } from 'lucide-react';
 import { useModalBackButton } from '../hooks/useModalBackButton';
 import data from '../data/rv1909';
+import { listPersonalModules, personalChapter, setActiveModule, PersonalModuleMeta } from '../utils/personalBible';
 
 // Reina-Valera 1909 completa, incluida en la app (dominio público, funciona sin conexión).
 const bible = data as Record<string, Record<string, Record<string, string>>>;
@@ -50,7 +51,7 @@ const gridBtnNT =
   'min-h-[52px] rounded-lg border-2 border-[#5b8ec4] bg-[#dcebf9] text-[#1d4368] font-bold text-[15px] text-center px-1 ' +
   'hover:bg-[#c6e0f5] active:bg-[#b0d4f0] transition-colors cursor-pointer';
 
-type Version = 'rv1909' | 'RVR1960' | 'PDT';
+type Version = 'rv1909' | 'RVR1960' | 'PDT' | `mod:${string}`;
 
 export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   useModalBackButton(true, onClose);
@@ -62,6 +63,38 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [refInput, setRefInput] = useState('');
   const [refError, setRefError] = useState(false);
   const [version, setVersion] = useState<Version>('rv1909');
+  const [modules, setModules] = useState<PersonalModuleMeta[]>([]);
+  const [personalVerses, setPersonalVerses] = useState<Record<string, string> | null>(null);
+  const [personalLoading, setPersonalLoading] = useState(false);
+
+  // Biblias personales cargadas en este dispositivo (si hay). Si hay una en uso,
+  // la Biblia abre directamente en esa versión; siempre se puede volver a la 1909.
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const ms = await listPersonalModules();
+        if (!live || !ms.length) return;
+        setModules(ms);
+        const active = ms.find(m => m.active) ?? ms[0];
+        if (active?.id) setVersion(`mod:${active.id}`);
+      } catch { /* sin módulos: queda la 1909 */ }
+    })();
+    return () => { live = false; };
+  }, []);
+
+  // Texto del capítulo desde la Biblia personal elegida (local, sin conexión).
+  useEffect(() => {
+    let live = true;
+    if (!version.startsWith('mod:') || !bookKey || chapter == null) { setPersonalVerses(null); setPersonalLoading(false); return; }
+    setPersonalLoading(true);
+    personalChapter(version.slice(4), bookKey, chapter)
+      .then(vs => { if (live) { setPersonalVerses(vs); setPersonalLoading(false); } });
+    return () => { live = false; };
+  }, [version, bookKey, chapter]);
+
+  const personalMeta = version.startsWith('mod:') ? modules.find(m => `mod:${m.id}` === version) : undefined;
+  const choosePersonal = (id: string) => { setVersion(`mod:${id}`); void setActiveModule(id); };
 
   const chapterCount = bookKey ? Object.keys(bible[bookKey] ?? {}).length : 0;
   const verses = bookKey && chapter ? bible[bookKey]?.[String(chapter)] : undefined;
@@ -148,9 +181,11 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               {title}
             </h2>
             <p className="text-sm opacity-75">
-              {chapter != null && !pickingVerse && version !== 'rv1909'
-                ? `${version} · en línea (BibleGateway) · necesita conexión`
-                : 'Reina-Valera 1909 (dominio público) · sin conexión'}
+              {version.startsWith('mod:')
+                ? `Tu Biblia personal · ${personalMeta?.name ?? ''} · sin conexión`
+                : chapter != null && !pickingVerse && version !== 'rv1909'
+                  ? `${version} · en línea (BibleGateway) · necesita conexión`
+                  : 'Reina-Valera 1909 (dominio público) · sin conexión'}
             </p>
           </div>
           <button aria-label="Cerrar Biblia" onClick={onClose} className="p-3 shrink-0"><X /></button>
@@ -239,10 +274,45 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   onClick={() => setVersion(v)}
                   aria-pressed={version === v}
                   className="library-control text-sm"
-                >{v === 'rv1909' ? 'RV1909 · sin conexión' : v}</button>
+                >{v === 'rv1909' ? 'RV1909 · sin conexión' : `${v} · en línea`}</button>
+              ))}
+              {modules.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => choosePersonal(m.id!)}
+                  aria-pressed={version === `mod:${m.id}`}
+                  title={m.name}
+                  className="library-control text-sm max-w-[220px] font-bold"
+                ><span className="truncate min-w-0">{m.name}</span></button>
               ))}
             </div>
-            {version === 'rv1909' ? (
+            {version.startsWith('mod:') ? (
+              <div className="overflow-auto p-5 sm:p-6 text-[22px] leading-[1.8] font-serif">
+                {personalLoading && <p className="text-base font-sans opacity-70">Abriendo tu Biblia personal…</p>}
+                {!personalLoading && personalVerses && Object.keys(personalVerses).map(Number).sort((a, b) => a - b).map(v => (
+                  <p key={v} id={`biblemodal-v-${v}`} className="mb-3 scroll-mt-4">
+                    <strong className="mr-2 text-[#315b46]">{v}</strong>{personalVerses[String(v)]}
+                  </p>
+                ))}
+                {!personalLoading && !personalVerses && (
+                  <>
+                    <p className="text-base leading-snug font-sans rounded-xl bg-[#f5e2c8] p-4 mb-4">
+                      Tu Biblia personal{personalMeta ? ` (${personalMeta.name})` : ''} no tiene este capítulo; por eso se muestra la Reina-Valera 1909.
+                    </p>
+                    {verseNumbers.map(v => (
+                      <p key={v} id={`biblemodal-v-${v}`} className="mb-3 scroll-mt-4">
+                        <strong className="mr-2 text-[#315b46]">{v}</strong>{verses[String(v)]}
+                      </p>
+                    ))}
+                  </>
+                )}
+                {!personalLoading && personalVerses && (
+                  <p className="text-base leading-snug mt-6 font-sans rounded-xl bg-[#e3ecdd] p-4">
+                    Estás leyendo tu Biblia personal{personalMeta ? ` (${personalMeta.name})` : ''}, guardada solo en este dispositivo. Funciona sin conexión.
+                  </p>
+                )}
+              </div>
+            ) : version === 'rv1909' ? (
               <div className="overflow-auto p-5 sm:p-6 text-[22px] leading-[1.8] font-serif">
                 {verseNumbers.map(v => (
                   <p key={v} id={`biblemodal-v-${v}`} className="mb-3 scroll-mt-4">
