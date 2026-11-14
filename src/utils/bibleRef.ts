@@ -27,6 +27,18 @@ export function rvr1960Url(ref: string): string | null {
   return `https://www.bible.com/bible/149/${id}.RVR1960`;
 }
 
+// Enlace al puente instalado en la tablet ("Puente biblico"): abre el pasaje en la app
+// MyBible con el modulo que tenga seleccionado, sin conexion. No copia texto biblico.
+export function myBibleUrl(ref: string): string {
+  // MyBible documenta abrir un versiculo o rango; si la cita es solo un capitulo
+  // ("Salmo 27"), apuntar al versiculo 1 para que abra el capitulo desde el principio.
+  const normalized = /:\d/.test(ref) ? ref : ref.replace(/(\d+)\s*$/, '$1:1');
+  return 'estudiosramela://biblia?ref=' + encodeURIComponent(normalized);
+}
+
+// Solo mostrar enlaces a la app cuando el dispositivo es Android (donde vive el puente).
+export const esAndroid = (): boolean => /Android/i.test(navigator.userAgent);
+
 // Abreviaturas OSIS que entiende STEP Bible (stepbible.org).
 const OSIS: Record<string, string> = {
   GEN:'Gen', EXO:'Exod', LEV:'Lev', NUM:'Num', DEU:'Deut', JOS:'Josh', JDG:'Judg', RUT:'Ruth',
