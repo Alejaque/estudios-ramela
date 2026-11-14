@@ -321,3 +321,15 @@ export async function personalPassage(reference: string): Promise<{ text: string
   const text = passageFromData(data, reference);
   return text ? { text, meta } : null;
 }
+
+// Capítulo completo (versículo -> texto) desde un módulo cargado, por su id.
+// null = módulo, libro o capítulo faltante. Todo local (IndexedDB), sin conexión.
+export async function personalChapter(moduleId: string, bookKey: string, chapter: number): Promise<Record<string, string> | null> {
+  try {
+    const db = await openDb();
+    const chapters = await idbGet(db, BOOKS_STORE, `${moduleId}:${normRef(bookKey)}`);
+    db.close();
+    const vs = chapters?.[String(chapter)];
+    return vs ? { ...vs } : null;
+  } catch { return null; }
+}
