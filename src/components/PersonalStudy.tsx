@@ -20,8 +20,6 @@ import { PassageReader } from './PassageReader';
 import { exportStudyToPdf } from '../utils/pdfExport';
 import {
   rvr1960Url,
-  myBibleUrl,
-  esAndroid,
   stepBibleUrl,
   blbUrl,
   matthewHenryUrl,
@@ -409,11 +407,6 @@ export const PersonalStudy: React.FC = () => {
               {rvrUrl && (
                 <a href={rvrUrl} target="_blank" rel="noreferrer" className="library-control text-sm">
                   <BookOpen size={16} /> Pasaje en RVR1960 <ExternalLink size={13} />
-                </a>
-              )}
-              {rvrUrl && esAndroid() && (
-                <a href={myBibleUrl(doc.passageOrTopic)} className="library-control text-sm">
-                  <BookOpen size={16} /> Pasaje en MyBible (app) <ExternalLink size={13} />
                 </a>
               )}
               {stepUrl && (
