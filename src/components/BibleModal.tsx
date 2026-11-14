@@ -268,23 +268,19 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <>
             <div className="px-4 pt-3 flex flex-wrap gap-2 items-center text-sm font-sans">
               <span className="opacity-70 mr-1">Versión:</span>
-              {(['rv1909', 'RVR1960', 'PDT'] as Version[]).map(v => (
-                <button
-                  key={v}
-                  onClick={() => setVersion(v)}
-                  aria-pressed={version === v}
-                  className="library-control text-sm"
-                >{v === 'rv1909' ? 'RV1909 · sin conexión' : `${v} · en línea`}</button>
-              ))}
-              {modules.map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => choosePersonal(m.id!)}
-                  aria-pressed={version === `mod:${m.id}`}
-                  title={m.name}
-                  className="library-control text-sm max-w-[220px] font-bold"
-                ><span className="truncate min-w-0">{m.name}</span></button>
-              ))}
+              <select
+                aria-label="Elegir versión de la Biblia"
+                className="library-control text-sm bg-[#fffdf8] max-w-[min(100%,420px)] truncate font-bold"
+                value={version}
+                onChange={e => {
+                  const v = e.target.value as Version;
+                  if (v.startsWith('mod:')) choosePersonal(v.slice(4));
+                  else setVersion(v);
+                }}
+              >
+                {modules.map(m => <option key={m.id} value={`mod:${m.id}`}>{m.name} · sin conexión</option>)}
+                <option value="rv1909">Reina-Valera 1909 · sin conexión</option>
+              </select>
             </div>
             {version.startsWith('mod:') ? (
               <div className="overflow-auto p-5 sm:p-6 text-[22px] leading-[1.8] font-serif">
