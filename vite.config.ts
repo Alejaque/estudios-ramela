@@ -122,7 +122,8 @@ export default defineConfig(() => {
           skipWaiting: true,
           clientsClaim: true,
           maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}'],
+          // wasm: motor SQLite del lector de la Biblia personal (offline).
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2,wasm}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
