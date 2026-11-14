@@ -486,7 +486,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
   };
 
   /**
-   * Salto a los Puntos I / II / III del desarrollo.
+   * Salto a los Puntos I a V del desarrollo.
    *
    * El contenido real titula los puntos como "**I. …**", "**II. …**",
    * "**III. …**" (sin la palabra "Punto"), por eso buscar el texto
@@ -496,7 +496,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
    * "Oración de Transición y Vista Previa" (que también los enumera,
    * pero está antes del desarrollo).
    */
-  const scrollToMainPoint = (numeral: 'I' | 'II' | 'III') => {
+  const scrollToMainPoint = (numeral: 'I' | 'II' | 'III' | 'IV' | 'V') => {
     const container = scrollContainerRef.current;
     if (!container) return;
     const n = numeral.toLowerCase();
@@ -542,8 +542,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     //     el numeral ("La cruz: fundamento de las dos respuestas"). Se reconoce
     //     por el encabezado del desarrollo, sin tocar el texto guardado.
     if (studyId === '2co-5-17-21-breve-20261106') {
-      const key = { I: 'quienes somos', II: 'para que estamos', III: 'fundamento de las dos respuestas' }[numeral];
-      const byTitle = Array.from(container.querySelectorAll('h1, h2, h3, h4')).find((el) =>
+      const key = ({ I: 'quienes somos', II: 'para que estamos', III: 'fundamento de las dos respuestas' } as Record<string, string>)[numeral];
+      const byTitle = key && Array.from(container.querySelectorAll('h1, h2, h3, h4')).find((el) =>
         normalizeText(el.textContent ?? '').includes(key)
       );
       if (byTitle) {
@@ -849,8 +849,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
           ...(hasContextoSection ? [['Contexto','Contexto'] as [string,string]] : []),
           ['Introducción','Introducción'],['Proposición','Proposición'],
           ...(passageText ? [['Pasaje','Pasaje'] as [string,string]] : []),
-          ['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['Conclusión','Conclusión'],['Oración','Oración'],['Biblia','Biblia']
-        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='Pasaje'?setPassageOpen(true):target==='Biblia'?setBibleOpen(true):target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
+          ['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['IV.','Punto IV'],['V.','Punto V'],['Conclusión','Conclusión'],['Oración','Oración'],['Biblia','Biblia']
+        ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='Pasaje'?setPassageOpen(true):target==='Biblia'?setBibleOpen(true):target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):target==='IV.'?scrollToMainPoint('IV'):target==='V.'?scrollToMainPoint('V'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
         {personalNote && (
           <button
             type="button"
