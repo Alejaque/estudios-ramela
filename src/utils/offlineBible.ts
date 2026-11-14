@@ -1,8 +1,11 @@
 import data from '../data/rv1909';
 const bible = data as Record<string,Record<string,Record<string,string>>>;
-const norm = (s:string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
-export function offlinePassage(reference:string):string | null {
- const m=norm(reference).match(/^(.+?)\s+(\d+)(?::(.+))?$/);if(!m)return null;
+export const normRef = (s:string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+export type BibleData = Record<string,Record<string,Record<string,string>>>;
+// Resuelve una referencia ("Salmo 27:1-3") contra un mapa libro→capítulo→versículo→texto.
+// Lo usan tanto la RV1909 empaquetada como el módulo personal del usuario.
+export function passageFromData(bible:BibleData, reference:string):string | null {
+ const m=normRef(reference).match(/^(.+?)\s+(\d+)(?::(.+))?$/);if(!m)return null;
  const key=m[1]==='salmo'?'salmos':m[1]; const book=bible[key];if(!book)return null;
  const chapter=book[m[2]];if(!chapter)return null;
  if(!m[3])return Object.entries(chapter).map(([v,t])=>`${v} ${t}`).join('\n\n');
@@ -20,3 +23,6 @@ export function offlinePassage(reference:string):string | null {
  }
  return lines.join('\n\n');
 }
+export function offlinePassage(reference:string):string | null {
+ return passageFromData(bible, reference);
+  }
