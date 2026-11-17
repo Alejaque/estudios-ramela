@@ -20,7 +20,7 @@ export interface PersonalModuleMeta {
 
 // Versión del parseo: subir cuando cambia stripHtml o la lectura del módulo.
 // Los módulos con archivo original guardado se re-procesan solos al abrir la app.
-const PARSER_VERSION = 2;
+const PARSER_VERSION = 3;
 
 const DB_NAME = 'personal-bible';
 const BOOKS_STORE = 'books';
@@ -118,8 +118,90 @@ async function getActiveId(db: IDBDatabase): Promise<string | null> {
   const active = await idbGet(db, META_STORE, 'active');
   if (active) return String(active);
   const keys = (await idbGetAllKeys(db, META_STORE)).filter(k => k.startsWith('mod:'));
-  return keys.length === 1 ? keys[0].slice(4) : null;
+  if (keys.length === 1) return keys[0].slice(4);
+  // Varias Biblias y ninguna elegida todavía: la RVR1960 es la principal de Ale; si no hay, ninguna (no se adivina).
+  for (const k of keys) {
+    const m: PersonalModuleMeta | undefined = await idbGet(db, META_STORE, k);
+    if (m && is1960Name(`${m.name} ${m.fileName}`)) return k.slice(4);
+  }
+  return null;
 }
+
+// RVR1960 de MyBible: "Reina Valera revisión de 1960", "RVR60", "RV'60+", etc. Solo ordena y fija el valor por defecto.
+export function is1960Name(s: string): boolean {
+  return /1960|rvr\s*60|rv['’]?\s*60/i.test(s);
+}
+
+// Numeración estándar de libros de MyBible -> clave de la app (las mismas de la RV1909 incluida).
+// Un módulo puede llamar a un libro "S.Juan", "San Juan" o "Cantar de los Cantares"; el número no cambia.
+const MYBIBLE_BOOK_KEYS: Record<number, string> = {
+  10: 'genesis',
+  20: 'exodo',
+  30: 'levitico',
+  40: 'numeros',
+  50: 'deuteronomio',
+  60: 'josue',
+  70: 'jueces',
+  80: 'rut',
+  90: '1 samuel',
+  100: '2 samuel',
+  110: '1 reyes',
+  120: '2 reyes',
+  130: '1 cronicas',
+  140: '2 cronicas',
+  150: 'esdras',
+  160: 'nehemias',
+  190: 'ester',
+  220: 'job',
+  230: 'salmos',
+  240: 'proverbios',
+  250: 'eclesiastes',
+  260: 'cantares',
+  290: 'isaias',
+  300: 'jeremias',
+  310: 'lamentaciones',
+  330: 'ezequiel',
+  340: 'daniel',
+  350: 'oseas',
+  360: 'joel',
+  370: 'amos',
+  380: 'abdias',
+  390: 'jonas',
+  400: 'miqueas',
+  410: 'nahum',
+  420: 'habacuc',
+  430: 'sofonias',
+  440: 'hageo',
+  450: 'zacarias',
+  460: 'malaquias',
+  470: 'mateo',
+  480: 'marcos',
+  490: 'lucas',
+  500: 'juan',
+  510: 'hechos',
+  520: 'romanos',
+  530: '1 corintios',
+  540: '2 corintios',
+  550: 'galatas',
+  560: 'efesios',
+  570: 'filipenses',
+  580: 'colosenses',
+  590: '1 tesalonicenses',
+  600: '2 tesalonicenses',
+  610: '1 timoteo',
+  620: '2 timoteo',
+  630: 'tito',
+  640: 'filemon',
+  650: 'hebreos',
+  660: 'santiago',
+  670: '1 pedro',
+  680: '2 pedro',
+  690: '1 juan',
+  700: '2 juan',
+  710: '3 juan',
+  720: 'judas',
+  730: 'apocalipsis',
+};
 
 // ---- Parseo de un módulo MyBible ----
 async function parseModuleBuffer(buf: Uint8Array, fileName: string, importedAt: string)
@@ -159,7 +241,8 @@ async function parseModuleBuffer(buf: Uint8Array, fileName: string, importedAt: 
       const [bn, ch, vs, tx] = stmt.get() as [number, number, number, string];
       const name = bookNames.get(Number(bn));
       if (!name) continue;
-      const key = normRef(name);
+      // Primero el número de libro estándar; si el módulo usa otra numeración, el nombre normalizado.
+      const key = MYBIBLE_BOOK_KEYS[Number(bn)] ?? normRef(name);
       const text = stripHtml(String(tx ?? ''));
       if (!text) continue;
       (byBook[key] ||= {});
@@ -234,7 +317,8 @@ export async function listPersonalModules(): Promise<PersonalModuleMeta[]> {
       out.push({ ...meta, active: meta.id === activeId, hasRaw: !!raw });
     }
     db.close();
-    return out;
+    // RVR1960 primero en las listas (pedido de Ale); el resto conserva su orden.
+    return out.map((m, i) => ({ m, i })).sort((x, y) => Number(is1960Name(`${y.m.name} ${y.m.fileName}`)) - Number(is1960Name(`${x.m.name} ${x.m.fileName}`)) || x.i - y.i).map(x => x.m);
   } catch { return []; }
 }
 
