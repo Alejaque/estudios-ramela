@@ -509,9 +509,16 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
     );
 
     // 1) Formato del desarrollo: "I. Título", "II. Título", "III. Título".
-    const direct = candidates.find((el) =>
-      directPattern.test(normalizeText(el.textContent ?? ''))
-    );
+    //    Primero los encabezados reales (h1-h4): en la Proposición los puntos
+    //    aparecen en negrita ("**I. …**") antes del desarrollo y no deben
+    //    ganar. Solo si no hay encabezado se recurre a negritas/listas/párrafos.
+    const direct =
+      candidates.find((el) =>
+        /^H[1-4]$/.test(el.tagName) && directPattern.test(normalizeText(el.textContent ?? ''))
+      ) ??
+      candidates.find((el) =>
+        directPattern.test(normalizeText(el.textContent ?? ''))
+      );
     if (direct) {
       scrollWithinContainer(direct);
       return;
