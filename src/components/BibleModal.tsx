@@ -293,13 +293,8 @@ export const BibleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 {!personalLoading && !personalVerses && (
                   <>
                     <p className="text-base leading-snug font-sans rounded-xl bg-[#f5e2c8] p-4 mb-4">
-                      Tu Biblia personal{personalMeta ? ` (${personalMeta.name})` : ''} no tiene este capítulo; por eso se muestra la Reina-Valera 1909.
+                      Tu Biblia personal{personalMeta ? ` (${personalMeta.name})` : ''} no tiene este capítulo, o no se pudo leer. No se muestra otra versión en su lugar. Probá con otra de tus Biblias en el selector.
                     </p>
-                    {verseNumbers.map(v => (
-                      <p key={v} id={`biblemodal-v-${v}`} className="mb-3 scroll-mt-4">
-                        <strong className="mr-2 text-[#315b46]">{v}</strong>{verses[String(v)]}
-                      </p>
-                    ))}
                   </>
                 )}
                 {!personalLoading && personalVerses && (
