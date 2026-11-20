@@ -1016,6 +1016,8 @@ function canConvert (input) {
 }
 
 export default TurndownService;
+const { gfm } = (() => {
+
 
 var highlightRegExp = /highlight-(?:text|source)-([a-z0-9]+)/;
 
@@ -1170,4 +1172,7 @@ function gfm (turndownService) {
   ]);
 }
 
-export { gfm, highlightedCodeBlock, strikethrough, tables, taskListItems };
+return { gfm, highlightedCodeBlock, strikethrough, tables, taskListItems };
+
+})();
+export { gfm };
