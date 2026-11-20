@@ -29,7 +29,7 @@ export function NewManualStudy({ onSave, onCancel }: {
     const failure = onSave(study);
     if (failure) setError(failure);
   }
-  return <section className="min-w-0 lg:col-span-2 w-full max-w-4xl mx-auto" aria-label="Nuevo estudio en blanco">
+  return <section lang="es-AR" spellCheck={true} autoCorrect="off" className="min-w-0 lg:col-span-2 w-full max-w-4xl mx-auto" aria-label="Nuevo estudio en blanco">
     <h2 className="font-serif text-3xl mb-3">Nuevo estudio en blanco</h2>
     <p className="mb-4">Lo escribís vos, sin IA. Se guarda como un estudio nuevo en tu biblioteca, sin reemplazar los anteriores. Las citas que escribas, como Juan 6:35, se podrán abrir también en Púlpito.</p>
     <label className="block font-bold mb-4">Referencia del pasaje
