@@ -1,3 +1,4 @@
+import { studyFormatting } from '../utils/studyFormatting';
 import { referenceLinks, bibleUrlTransform } from '../utils/bibleReferences';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -605,7 +606,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
             >
               <ReactMarkdown
-                remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                remarkPlugins={[remarkGfm, studyFormatting, referenceLinks(passageOrTopic)]}
                 urlTransform={bibleUrlTransform}
                 components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
               >
@@ -853,8 +854,8 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
         {moreOpen && (
         <>
         {[
-          ...(hasContextoSection ? [['Contexto','Contexto'] as [string,string]] : []),
           ['Introducción','Introducción'],['Proposición','Proposición'],
+          ...(hasContextoSection ? [['Contexto','Contexto'] as [string,string]] : []),
           ...(passageText ? [['Pasaje','Pasaje'] as [string,string]] : []),
           ['I.','Punto I'],['II.','Punto II'],['III.','Punto III'],['IV.','Punto IV'],['V.','Punto V'],['Conclusión','Conclusión'],['Oración','Oración'],['Biblia','Biblia']
         ].map(([target,label])=><button key={target} type="button" onClick={()=>target==='Pasaje'?setPassageOpen(true):target==='Biblia'?setBibleOpen(true):target==='I.'?scrollToMainPoint('I'):target==='II.'?scrollToMainPoint('II'):target==='III.'?scrollToMainPoint('III'):target==='IV.'?scrollToMainPoint('IV'):target==='V.'?scrollToMainPoint('V'):scrollToHeading(target)} className="px-3 min-h-[40px] rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition-colors shrink-0 cursor-pointer">{label}</button>)}
@@ -931,7 +932,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
             ) : passageText ? (
               <>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                  remarkPlugins={[remarkGfm, studyFormatting, referenceLinks(passageOrTopic)]}
                   urlTransform={bibleUrlTransform}
                   components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
                 >
@@ -953,7 +954,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
                     pero sí aparece en la hoja impresa del púlpito. */}
                 <div className="print-only passage-print">
                   <ReactMarkdown
-                    remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                    remarkPlugins={[remarkGfm, studyFormatting, referenceLinks(passageOrTopic)]}
                     urlTransform={bibleUrlTransform}
                     components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
                   >
@@ -962,7 +963,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
                 </div>
                 {splitForPassage(displayContent)[1] && (
                   <ReactMarkdown
-                    remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                    remarkPlugins={[remarkGfm, studyFormatting, referenceLinks(passageOrTopic)]}
                     urlTransform={bibleUrlTransform}
                     components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
                   >
@@ -972,7 +973,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
               </>
             ) : (
               <ReactMarkdown
-                remarkPlugins={[remarkGfm, referenceLinks(passageOrTopic)]}
+                remarkPlugins={[remarkGfm, studyFormatting, referenceLinks(passageOrTopic)]}
                 urlTransform={bibleUrlTransform}
                 components={{ a: ({href,children}) => href?.startsWith('bible:') ? <button type="button" className="underline decoration-dotted underline-offset-4" onClick={() => setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button> : <a href={href}>{children}</a> }}
               >
@@ -1219,7 +1220,7 @@ export const PulpitModal: React.FC<PulpitModalProps> = ({
  * genera contenido nuevo.
  */
 const PulpitSummaryView: React.FC<{ summary: import('../utils/pulpitSummary').PulpitSummary; context:string; onReference:(ref:string)=>void }> = ({ summary,context,onReference }) => {
-  const linked=(text:string|undefined)=><ReactMarkdown remarkPlugins={[remarkGfm,referenceLinks(context)]} urlTransform={bibleUrlTransform} components={{p:({children})=><span>{children}</span>,a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted underline-offset-4" onClick={()=>onReference(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{text||''}</ReactMarkdown>;
+  const linked=(text:string|undefined)=><ReactMarkdown remarkPlugins={[remarkGfm,studyFormatting,referenceLinks(context)]} urlTransform={bibleUrlTransform} components={{p:({children})=><span>{children}</span>,a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted underline-offset-4" onClick={()=>onReference(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{text||''}</ReactMarkdown>;
   const applications = summary.points.filter((point) => point.application);
   return (
     <div className="pulpit-summary space-y-7">
