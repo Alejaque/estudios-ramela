@@ -15,6 +15,8 @@ export interface StudyOptions {
 }
 
 export interface SavedStudy {
+  /** Creado en blanco por el usuario, sin generación automática. */
+  manual?: boolean;
   id: string;
   title: string;
   passageOrTopic: string;
