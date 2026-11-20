@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from 'react';
+import { RichStudyField } from './RichStudyField';
 
 export interface StudyEditResult { title: string; content: string; passageText?: string; passageLabel?: string; }
 
@@ -55,41 +56,28 @@ export function StudyEditor({ title, content, passageText, passageLabel, size, m
       <div className="sticky top-[84px] z-20 flex flex-wrap gap-3 items-center bg-[#fffdf8] dark:bg-[#18241d] py-2">
         <button type="button" disabled={!changed && !alwaysSave} onClick={() => onSave({ title: t.trim() || title, content: joinSections(secs), passageText: pt, passageLabel: pl })} className="library-control" style={{ minHeight: 52, fontSize: 18, background: '#315b46', color: 'white', opacity: changed || alwaysSave ? 1 : 0.5 }}>{saveLabel}</button>
         <button type="button" onClick={() => { if (!confirmCancel || !changed || confirm('¿Salir sin guardar los cambios?')) onCancel(); }} className="library-control" style={{ minHeight: 52, fontSize: 18 }}>Cancelar</button>
-        <span className="text-sm opacity-70">{manual ? 'Escribí tus propias secciones y puntos.' : 'Tu texto original se conserva.'} {manual && 'Podés escribir subpuntos A, B y C dentro de cada punto. '}Las <b>negritas</b> se escriben entre dos asteriscos: **así**.</span>
+
       </div>
+        <p className="text-sm opacity-70">{manual ? 'Escribí tus propias secciones y puntos.' : 'Tu texto original se conserva.'} {manual && 'Podés escribir subpuntos A, B y C dentro de cada punto. '}Seleccioná lo que escribís y usá los botones de formato. No necesitás escribir símbolos.</p>
       <label className="block font-bold">Título
         <input value={t} onChange={(e) => setT(e.target.value)} className={field + ' mt-2'} style={{ fontSize: 'inherit' }} />
       </label>
       {secs.map((s, i) => (
         <Fragment key={i}>
         {manual && s.heading === 'Conclusión' && <button type="button" className="library-control" onClick={() => { const n = secs.filter(x => /^[IVXLCDM]+\. /.test(x.heading)).length; const roman = romanPoint(n + 1); setSecs([...secs.slice(0,i), {heading: roman + '. Punto principal', body: ''}, ...secs.slice(i)]); }}>Agregar punto principal</button>}
-        {manual && /^[IVXLCDM]+\. /.test(s.heading) && <label className="block font-bold">Título del punto {i - 1}<input aria-label={'Título del punto ' + (i - 1)} value={s.heading.replace(/^[IVXLCDM]+\. /, '')} onChange={e => setSecs(secs.map((x,j) => j === i ? {...x, heading: s.heading.match(/^[IVXLCDM]+\. /)![0] + e.target.value.replace(/[\r\n]/g, ' ')} : x))} className={field + ' mt-2 mb-3'} /></label>}
-        <label className="block font-bold">{s.heading || 'Texto inicial'}
-          <textarea
-            aria-label={s.heading || 'Texto inicial'}
-            value={s.body}
-            onChange={(e) => setSecs(secs.map((x, j) => (j === i ? { ...x, body: e.target.value } : x)))}
-            rows={Math.min(24, Math.max(4, Math.ceil(s.body.length / 38)))}
-            className={field + ' mt-2 font-serif font-normal'}
-            style={{ fontSize: 'inherit' }}
-          />
-        </label>
+        {manual && /^[IVXLCDM]+\. /.test(s.heading) && <label className="block font-bold">Título del punto {secs.slice(0,i+1).filter(x=>/^[IVXLCDM]+\. /.test(x.heading)).length}<input aria-label={'Título del punto ' + secs.slice(0,i+1).filter(x=>/^[IVXLCDM]+\. /.test(x.heading)).length} value={s.heading.replace(/^[IVXLCDM]+\. /, '')} onChange={e => setSecs(secs.map((x,j) => j === i ? {...x, heading: s.heading.match(/^[IVXLCDM]+\. /)![0] + e.target.value.replace(/[\r\n]/g, ' ')} : x))} className={field + ' mt-2 mb-3'} /></label>}
+        <div className="block font-bold">{s.heading || 'Texto inicial'}
+          <RichStudyField key={s.heading} label={s.heading || 'Texto inicial'} value={s.body} onChange={body=>setSecs(secs.map((x,j)=>j===i?{...x,body}:x))} />
+        </div>
         {i === passageAt && (
         <div className="rounded-xl border-2 border-dashed border-[#c9b977] p-4 space-y-4">
           <p className="font-bold">Pasaje</p>
           <label className="block font-bold">Etiqueta (referencia y versión)
             <input value={pl} onChange={(e) => setPl(e.target.value)} placeholder="Pasaje" className={field + ' mt-2'} style={{ fontSize: 'inherit' }} />
           </label>
-          <label className="block font-bold">Texto del pasaje
-            <textarea
-              value={pt}
-              onChange={(e) => setPt(e.target.value)}
-              placeholder="Pegá acá el texto del pasaje"
-              rows={Math.min(24, Math.max(6, Math.ceil(pt.length / 38)))}
-              className={field + ' mt-2 font-serif font-normal'}
-              style={{ fontSize: 'inherit' }}
-            />
-          </label>
+          <div className="block font-bold">Texto del pasaje
+            <RichStudyField label="Texto del pasaje" value={pt} onChange={setPt} minRows={6} />
+          </div>
           <p className="text-sm opacity-70">{passageText === undefined && !pt
             ? 'Este estudio todavía no tiene pasaje propio: pegalo acá y va a aparecer como bloque "Pasaje" en el apunte y en Saltos del púlpito. Ajustá la etiqueta con la referencia y versión correctas.'
             : 'Podés borrarlo y pegar otro texto; ajustá la etiqueta para que diga la referencia y versión correctas. Si lo dejás vacío, el bloque Pasaje se oculta hasta que pegues uno nuevo.'} {manual ? 'Guardá tus cambios antes de salir. Para llevarlos a otro equipo, usá Sincronización entre dispositivos si ya lo vinculaste.' : 'Se guarda en este dispositivo (no se sincroniza con otros); tu texto original se conserva.'}</p>
@@ -103,16 +91,9 @@ export function StudyEditor({ title, content, passageText, passageLabel, size, m
           <label className="block font-bold">Etiqueta (referencia y versión)
             <input value={pl} onChange={(e) => setPl(e.target.value)} placeholder="Pasaje" className={field + ' mt-2'} style={{ fontSize: 'inherit' }} />
           </label>
-          <label className="block font-bold">Texto del pasaje
-            <textarea
-              value={pt}
-              onChange={(e) => setPt(e.target.value)}
-              placeholder="Pegá acá el texto del pasaje"
-              rows={Math.min(24, Math.max(6, Math.ceil(pt.length / 38)))}
-              className={field + ' mt-2 font-serif font-normal'}
-              style={{ fontSize: 'inherit' }}
-            />
-          </label>
+          <div className="block font-bold">Texto del pasaje
+            <RichStudyField label="Texto del pasaje" value={pt} onChange={setPt} minRows={6} />
+          </div>
           <p className="text-sm opacity-70">{passageText === undefined && !pt
             ? 'Este estudio todavía no tiene pasaje propio: pegalo acá y va a aparecer como bloque "Pasaje" en el apunte y en Saltos del púlpito. Ajustá la etiqueta con la referencia y versión correctas.'
             : 'Podés borrarlo y pegar otro texto; ajustá la etiqueta para que diga la referencia y versión correctas. Si lo dejás vacío, el bloque Pasaje se oculta hasta que pegues uno nuevo.'} {manual ? 'Guardá tus cambios antes de salir. Para llevarlos a otro equipo, usá Sincronización entre dispositivos si ya lo vinculaste.' : 'Se guarda en este dispositivo (no se sincroniza con otros); tu texto original se conserva.'}</p>
@@ -120,4 +101,4 @@ export function StudyEditor({ title, content, passageText, passageLabel, size, m
       )}
     </div>
   );
-                                                                                       }
+}
