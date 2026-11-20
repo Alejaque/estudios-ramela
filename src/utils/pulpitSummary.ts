@@ -211,6 +211,8 @@ export function highlightKeyIdeas(markdown: string): string {
     .map((block) => {
       const t = block.trim();
       if (!t) return block;
+      // User emphasis already carries its own ranges; do not split those tags with automatic bold.
+      if (/<\/?(?:u|mark)>/.test(t)) return block;
       // Encabezados, citas en bloque, código y tablas: ya destacados o no aplican.
       if (/^(#{1,6}\s|>|```|\|)/.test(t)) return block;
       // Listas: negrita al contenido de cada ítem (sin tocar el marcador).
