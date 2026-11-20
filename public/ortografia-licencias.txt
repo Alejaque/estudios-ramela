@@ -125,7 +125,7 @@ creación de este diccionario. Se agradece especialmente a:
      a este diccionario.
 
 
-Las fuentes originales del diccionario usadas por esta aplicación están disponibles en ortografia-fuentes.zip junto a este aviso. Los ficheros index.aff e index.dic se usan sin modificar. Licencia seleccionada: Mozilla Public License 2.0. El motor nspell y su dependencia is-buffer tienen licencia MIT. El diccionario se distribuye sin garantías.
+Las fuentes originales del diccionario usadas por esta aplicación están disponibles en 2-ortografia-fuentes.zip junto a este aviso. Los ficheros index.aff e index.dic se usan sin modificar. Licencia seleccionada: Mozilla Public License 2.0. El motor nspell y su dependencia is-buffer tienen licencia MIT. El diccionario se distribuye sin garantías.
 
 Mozilla Public License Version 2.0
 ==================================
