@@ -93,7 +93,7 @@ export function exportStudyToPdf({
   // Clean Markdown parsing for PDF
   // Strip heavy markdown tokens while preserving structure and bullets
   // Incluye la Oración de Transición y Vista Previa si el bosquejo no la trae.
-  const lines = ensureOutlineTransition(content).split('\n');
+  const lines = ensureOutlineTransition(content).replace(/<\/?(?:u|mark)>/g, '').split('\n');
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
@@ -242,4 +242,4 @@ export function exportStudyToPdf({
   const fileName = `Estudio_Alejandro_Ramela_${cleanPassage}.pdf`;
 
   doc.save(fileName);
-}
+  }
