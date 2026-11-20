@@ -2,15 +2,14 @@ import React, { useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import TurndownService from 'turndown';
-// @ts-expect-error The GFM extension has no declaration file.
-import { gfm } from 'turndown-plugin-gfm';
+import TurndownService, { gfm } from '../utils/studyMarkdown';
 import { studyFormatting } from '../utils/studyFormatting';
 
-const markdown = new TurndownService({headingStyle:'atx', bulletListMarker:'-', emDelimiter:'*', strongDelimiter:'**', codeBlockStyle:'fenced'});
+const MarkdownConstructor = TurndownService as unknown as {new(options:unknown): {use:(plugin:unknown)=>void;addRule:(name:string,rule:unknown)=>void;turndown:(html:string)=>string}};
+const markdown = new MarkdownConstructor({headingStyle:'atx', bulletListMarker:'-', emDelimiter:'*', strongDelimiter:'**', codeBlockStyle:'fenced'});
 markdown.use(gfm);
-markdown.addRule('underline', {filter:['u'], replacement:(s) => s ? '<u>'+s+'</u>' : ''});
-markdown.addRule('highlight', {filter:['mark'], replacement:(s) => s ? '<mark>'+s+'</mark>' : ''});
+markdown.addRule('underline', {filter:['u'], replacement:(s:string) => s ? '<u>'+s+'</u>' : ''});
+markdown.addRule('highlight', {filter:['mark'], replacement:(s:string) => s ? '<mark>'+s+'</mark>' : ''});
 
 export function RichStudyField({value, onChange, label, minRows = 4}: {value:string; onChange:(s:string)=>void; label:string; minRows?:number}) {
   const editor = useRef<HTMLDivElement>(null);
