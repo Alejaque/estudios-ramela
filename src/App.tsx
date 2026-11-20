@@ -24,6 +24,7 @@ import { PWAInstallButton } from './components/PWAInstallButton';
 import { exportStudyToPdf } from './utils/pdfExport';
 import { splitForPassage, contentWithPassage, hideLegacyPassageSection } from './utils/passageFold';
 import type { SavedStudy } from './types';
+import { NewManualStudy } from './components/NewManualStudy';
 import { StudyEditor } from './components/StudyEditor';
 import { SyncPanel } from './components/SyncPanel';
 import { PersonalBiblePanel } from './components/PersonalBiblePanel';
@@ -52,6 +53,8 @@ export default function App() {
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark);},[dark]);
  const [edits,setEdits]=useState<Record<string,Edit>>(()=>{try{return JSON.parse(localStorage.getItem('study_edits')||'{}')}catch{return {}}});
  const [editing,setEditing]=useState(false);
+ const [creatingManual,setCreatingManual]=useState(false);
+ const [manualMessage,setManualMessage]=useState('');
  const [passageEditing,setPassageEditing]=useState(false);
  const [pLabel,setPLabel]=useState('');
  const [pText,setPText]=useState('');
@@ -87,7 +90,7 @@ export default function App() {
  const [notes,setNotes]=useState(false);
  const [importError,setImportError]=useState('');
  const [imported,setImported]=useState<SavedStudy[]>(()=>{try{return JSON.parse(localStorage.getItem('reviewed_library_imports')||'[]')}catch{return []}});
- useEffect(()=>{setAppBusy(pulpit||editing||notes||bible||busy||archive);},[pulpit,editing,notes,bible,busy,archive]);
+ useEffect(()=>{setAppBusy(pulpit||editing||creatingManual||notes||bible||busy||archive);},[pulpit,editing,creatingManual,notes,bible,busy,archive]);
  const previous: SavedStudy[]=(()=>{try{return JSON.parse(localStorage.getItem('biblical_studies_saved')||'[]')}catch{return []}})();
  const isDraft=mode==='drafts';
  const currentIsDraft=drafts.some(d=>d.id===study.id);
@@ -100,16 +103,31 @@ const library=(isDraft?drafts:[JUAN_EXPOSICION,COR2_BREVE,JUAN2,JUAN2_BREVE,TES_
  function resize(n:number){const next=Math.max(18,Math.min(32,size+n));setSize(next);if(study.id==='2co-5-17-21-breve-20261106'){localStorage.setItem('library_size_'+study.id,String(next));}else{localStorage.setItem('library_size',String(next));}}
  const [importText,setImportText]=useState('');
  function saveImportedText(text:string){try{const stored=JSON.parse(localStorage.getItem('reviewed_library_imports')||'[]');if(!Array.isArray(stored))throw Error('No se pudo comprobar la biblioteca actual. No se guardó nada.');const next=prepareReviewedImport(text,stored);localStorage.setItem('reviewed_library_imports',JSON.stringify(next));setImported(next);setImportError('Estudio agregado a tu biblioteca. Podés sincronizarlo con tus dispositivos.');setImportText('');}catch(e){setImportError(e instanceof Error?e.message:'No se pudo guardar. No se cambió la biblioteca.');}}
+ function saveManualStudy(item:SavedStudy):string|null{
+  try{
+   const raw=JSON.parse(localStorage.getItem('reviewed_library_imports')||'[]');
+   if(!Array.isArray(raw)||raw.some(x=>!x||typeof x.id!=='string'))return 'No se pudo comprobar tu biblioteca. No se guardó nada.';
+   if(raw.some(x=>x.id===item.id))return 'Ya existe ese estudio. No se reemplazó nada.';
+   const next=[...raw,item];
+   localStorage.setItem('reviewed_library_imports',JSON.stringify(next));
+   setImported(next);setStudy(item);setMode('library');setQuery('');setListOpen(false);setEditing(false);setCreatingManual(false);
+   setManualMessage('Estudio nuevo guardado en tu biblioteca. Podés volver a editarlo o abrir Modo Púlpito.');
+   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'instant'}));
+   return null;
+  }catch{return 'No se pudo guardar el estudio. Revisá el espacio disponible; tu texto sigue abierto y tus estudios anteriores no se cambiaron.';}
+ }
+ function openManualStudy(){if(editing||passageEditing){alert('Guardá o cancelá la edición abierta antes de empezar otro estudio.');return;}setManualMessage('');setCreatingManual(true);setNotes(false);}
  async function importStudies(file:File){let text:string;try{text=await file.text()}catch{setImportError('No se pudo leer el archivo desde este acceso. Podés usar Pegar estudio JSON.');return}saveImportedText(text);}
  return <div className={dark?'dark':''}><div className="library-shell min-h-screen bg-[#f6f3ed] text-[#24352c] dark:bg-[#111a17] dark:text-[#eeeae0] pb-20">
  <header className="sticky top-0 z-30 border-b border-[#d8ded5] dark:border-[#35443b] bg-[#f6f3ed]/95 dark:bg-[#111a17]/95 backdrop-blur px-4 sm:px-8 py-4 flex items-center justify-between gap-3">
   <div><div className="text-[10px] tracking-[0.22em] uppercase text-[#627467] dark:text-[#b1c3b6] font-bold">Biblioteca del expositor</div><h1 className="font-serif font-bold text-xl sm:text-2xl">Alejandro Ramela</h1><div className="text-[10px] text-[#8a978d] dark:text-[#7d8f82]">Actualizada: {__APP_BUILD__}</div></div>
-  <div className="flex items-center gap-2"><button aria-label="Cambiar tema" onClick={()=>{setDark(!dark);localStorage.setItem('library_dark',String(!dark));}} className="p-3 rounded-full border border-[#bbc9bd]">{dark?<Sun size={20}/>:<Moon size={20}/>}</button><button onClick={()=>setPulpit(true)} className="rounded-xl bg-[#315b46] text-white px-4 py-3 font-semibold flex gap-2 items-center"><Maximize2 size={18}/><span className="hidden sm:inline">Modo </span>Púlpito</button></div>
+  <div className="flex items-center gap-2"><button aria-label="Cambiar tema" onClick={()=>{setDark(!dark);localStorage.setItem('library_dark',String(!dark));}} className="p-3 rounded-full border border-[#bbc9bd]">{dark?<Sun size={20}/>:<Moon size={20}/>}</button><button disabled={creatingManual} onClick={()=>setPulpit(true)} className="rounded-xl bg-[#315b46] text-white px-4 py-3 font-semibold flex gap-2 items-center"><Maximize2 size={18}/><span className="hidden sm:inline">Modo </span>Púlpito</button></div>
  </header>
  <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-5"><CoverHero/></div>
- <nav className="max-w-7xl mx-auto px-4 sm:px-8 pt-5 flex gap-3"><button className="library-control" aria-pressed={!isDraft} onClick={()=>{setMode('library');load(JUAN);}}>Biblioteca</button><button className="library-control" aria-pressed={isDraft} onClick={()=>{setMode('drafts');if(drafts[0])load(drafts[0]);}}>Borradores</button></nav>
+ <nav aria-hidden={creatingManual || undefined} inert={creatingManual || undefined} className="max-w-7xl mx-auto px-4 sm:px-8 pt-5 flex gap-3"><button className="library-control" aria-pressed={!isDraft} onClick={()=>{setMode('library');load(JUAN);}}>Biblioteca</button><button className="library-control" aria-pressed={isDraft} onClick={()=>{setMode('drafts');if(drafts[0])load(drafts[0]);}}>Borradores</button></nav>
  <main className="max-w-7xl mx-auto p-4 sm:p-8 grid lg:grid-cols-[280px_minmax(0,1fr)] gap-7 items-start">
- <aside className="lg:sticky lg:top-28"><div className="flex items-center justify-between mb-4"><h2 className="font-serif text-2xl flex gap-2 items-center"><Library size={22}/> {isDraft?'Borradores':'Tus estudios'}</h2><PWAInstallButton variant="header"/></div>
+ <aside inert={creatingManual || undefined} className={creatingManual?'hidden':'lg:sticky lg:top-28'}><div className="flex items-center justify-between mb-4"><h2 className="font-serif text-2xl flex gap-2 items-center"><Library size={22}/> {isDraft?'Borradores':'Tus estudios'}</h2><PWAInstallButton variant="header"/></div>
+ <button type="button" onClick={openManualStudy} className="library-control w-full mb-4" style={{background:'#315b46',color:'white'}}>Nuevo estudio en blanco</button>
  {isDraft&&<form onSubmit={generate} className="mb-5 space-y-3"><label className="block font-semibold" htmlFor="draft-passage">Nuevo borrador con IA</label><input id="draft-passage" value={draftPassage} onChange={e=>setDraftPassage(e.target.value)} placeholder="Pasaje o tema" className="library-control w-full bg-transparent" required/><button disabled={busy} className="library-control w-full">{busy?'Preparando borrador…':'Crear borrador'}</button>{draftError&&<p role="alert" className="text-sm">{draftError}</p>}</form>}
  <button type="button" onClick={()=>setListOpen(!listOpen)} aria-expanded={listOpen} className="w-full flex items-center justify-between gap-3 rounded-xl border border-[#cbd4c9] dark:border-[#405245] px-4 py-3 mb-4 font-semibold text-left"><span className="min-w-0 truncate">{listOpen?(isDraft?'Cerrar la lista de borradores':'Cerrar la lista de estudios'):((isDraft?'Elegir otro borrador':'Elegir otro estudio')+' ('+visible.length+') · Abierto: '+study.title)}</span>{listOpen?<ChevronUp size={18} className="shrink-0"/>:<ChevronDown size={18} className="shrink-0"/>}</button>
  {listOpen&&<>
@@ -123,7 +141,7 @@ const library=(isDraft?drafts:[JUAN_EXPOSICION,COR2_BREVE,JUAN2,JUAN2_BREVE,TES_
 <SyncPanel onSynced={()=>{try{setEdits(JSON.parse(localStorage.getItem('study_edits')||'{}'));}catch{}try{setDrafts(JSON.parse(localStorage.getItem('biblical_drafts')||'[]'));}catch{}try{setImported(JSON.parse(localStorage.getItem('reviewed_library_imports')||'[]'));}catch{}}}/>
  {previous.length>0&&<button className="mt-4 underline text-sm py-3" onClick={()=>setArchive(true)}>Guardados anteriores ({previous.length})</button>}
  </aside>
- {(!isDraft||drafts.length>0)?<section className="min-w-0">{isDraft&&<div className="mb-4 flex gap-3 items-center"><span className="text-xs tracking-wide border rounded px-2 py-1">Borrador</span>{drafts.some(s=>s.id===study.id)&&<button className="library-control text-sm" onClick={promote}>Mover a biblioteca</button>}</div>}<div className="mb-6"><p className="text-sm tracking-wide uppercase opacity-65 mb-2">{study.passageOrTopic} · {study.translation || 'Versión no indicada'}</p><h2 className="font-serif text-3xl sm:text-4xl leading-tight max-w-3xl">{study.title}</h2><div className="flex flex-wrap gap-2 mt-5">
+ {creatingManual?<NewManualStudy onSave={saveManualStudy} onCancel={()=>{setCreatingManual(false);setManualMessage('');}}/>:(!isDraft||drafts.length>0)?<section className="min-w-0">{isDraft&&<div className="mb-4 flex gap-3 items-center"><span className="text-xs tracking-wide border rounded px-2 py-1">Borrador</span>{drafts.some(s=>s.id===study.id)&&<button className="library-control text-sm" onClick={promote}>Mover a biblioteca</button>}</div>}<div className="mb-6">{manualMessage&&<p role="status" className="p-3 mb-4 rounded-xl border">{manualMessage}</p>}<p className="text-sm tracking-wide uppercase opacity-65 mb-2">{study.passageOrTopic} · {study.translation || 'Versión no indicada'}</p><h2 className="font-serif text-3xl sm:text-4xl leading-tight max-w-3xl">{study.title}</h2><div className="flex flex-wrap gap-2 mt-5">
  <button onClick={()=>setBible(true)} className="library-control"><BookOpen size={18}/> Leer pasaje</button>
  <button onClick={()=>setBibleNav(true)} className="library-control"><BookMarked size={18}/> Biblia</button>
  <button onClick={openPassageEditor} className="library-control"><PenLine size={18}/> {study.passageText?'Editar pasaje':'Agregar pasaje'}</button>
@@ -133,7 +151,7 @@ const library=(isDraft?drafts:[JUAN_EXPOSICION,COR2_BREVE,JUAN2,JUAN2_BREVE,TES_
  <button onClick={()=>setEditing(true)} className="library-control" style={{background:'#315b46',color:'white'}}><PenLine size={18}/> Editar estudio</button></div>
  {edit&&<p className="mt-3 text-sm flex flex-wrap gap-3 items-center"><span>✎ Editado en este dispositivo</span>{edit.previous.length>0&&<button className="underline py-2" onClick={undoEdit}>Deshacer último cambio</button>}<button className="underline py-2" onClick={restoreOriginal}>Volver al texto original</button></p>}</div>
  <details className="mb-5 border-y border-[#cbd4c9] dark:border-[#405245] py-3"><summary className="font-semibold cursor-pointer">Recorrido del estudio</summary><div className="flex flex-wrap gap-2 mt-3">{sections.map(s=><button key={s} onClick={()=>jump(s)} className="library-control text-sm">{s}</button>)}</div></details>
- {editing?<StudyEditor key={study.id} title={study.title} content={study.content} passageText={study.passageText} passageLabel={study.passageLabel ?? `Pasaje: ${study.passageOrTopic} · ${study.translation || 'PDT'}`} size={size} onSave={saveEdit} onCancel={()=>setEditing(false)}/>:<article id="reading" className={`library-reading${study.id==='2co-5-17-21-breve-20261106'?' hook-emphasis':''} bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl px-5 sm:px-9 py-7 sm:py-10 shadow-sm`} style={{fontSize:size,lineHeight:1.75}}>{(()=>{const [pre,post]=splitForPassage(shownContent);if(!post&&!study.passageText)return mdView(shownContent);const label=study.passageLabel ?? `Pasaje: ${study.passageOrTopic} · ${study.translation || 'PDT'}`;return <>{mdView(pre)}<div className="passage-slot my-7" id="passage-slot">{study.passageText?<><details className="passage-fold rounded-xl border border-[#d8c98a] dark:border-[#5c5433] bg-[#fdf6e0] dark:bg-[#26291b] px-5 py-4"><summary className="cursor-pointer font-bold select-none">📖 {label} (tocar para abrir)</summary><div className="mt-4">{mdView(study.passageText)}</div></details><div className="print-only passage-print">{mdView(study.passageText)}</div></>:<div className="rounded-xl border-2 border-dashed border-[#b3a369] dark:border-[#6b6240] px-5 py-4"><p className="font-semibold">Este estudio todavía no tiene el pasaje cargado.</p></div>}{!passageEditing&&<button type="button" onClick={openPassageEditor} className="library-control mt-3"><PenLine size={18}/> {study.passageText?'Editar pasaje':'Agregar pasaje'}</button>}</div>
+ {editing?<StudyEditor manual={study.manual} key={study.id} title={study.title} content={study.content} passageText={study.passageText} passageLabel={study.passageLabel ?? `Pasaje: ${study.passageOrTopic} · ${study.translation || 'PDT'}`} size={size} onSave={saveEdit} onCancel={()=>setEditing(false)}/>:<article id="reading" className={`library-reading${study.id==='2co-5-17-21-breve-20261106'?' hook-emphasis':''} bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl px-5 sm:px-9 py-7 sm:py-10 shadow-sm`} style={{fontSize:size,lineHeight:1.75}}>{(()=>{const [pre,post]=splitForPassage(shownContent);if(!post&&!study.passageText)return mdView(shownContent);const label=study.passageLabel ?? `Pasaje: ${study.passageOrTopic} · ${study.translation || 'PDT'}`;return <>{mdView(pre)}<div className="passage-slot my-7" id="passage-slot">{study.passageText?<><details className="passage-fold rounded-xl border border-[#d8c98a] dark:border-[#5c5433] bg-[#fdf6e0] dark:bg-[#26291b] px-5 py-4"><summary className="cursor-pointer font-bold select-none">📖 {label} (tocar para abrir)</summary><div className="mt-4">{mdView(study.passageText)}</div></details><div className="print-only passage-print">{mdView(study.passageText)}</div></>:<div className="rounded-xl border-2 border-dashed border-[#b3a369] dark:border-[#6b6240] px-5 py-4"><p className="font-semibold">Este estudio todavía no tiene el pasaje cargado.</p></div>}{!passageEditing&&<button type="button" onClick={openPassageEditor} className="library-control mt-3"><PenLine size={18}/> {study.passageText?'Editar pasaje':'Agregar pasaje'}</button>}</div>
  {passageEditing&&<div className="my-7 rounded-xl border-2 border-dashed border-[#b3a369] dark:border-[#6b6240] p-4">
  <h3 className="font-bold mb-3">Pasaje del estudio</h3>
  <label className="block font-semibold mb-2" htmlFor="passage-label-inline">Etiqueta (referencia y versión)</label>
@@ -153,4 +171,4 @@ const library=(isDraft?drafts:[JUAN_EXPOSICION,COR2_BREVE,JUAN2,JUAN2_BREVE,TES_
  {archive&&<div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl p-6 w-full max-w-xl max-h-[85dvh] overflow-auto"><div className="flex justify-between items-center mb-4"><h2 className="font-serif text-2xl">Guardados anteriores</h2><button aria-label="Cerrar guardados" onClick={()=>setArchive(false)} className="p-3"><X/></button></div>{previous.map(s=><button key={s.id} onClick={()=>load(s)} className="block w-full text-left p-4 border-b"><strong>{s.passageOrTopic}</strong><span className="block">{s.title}</span></button>)}</div></div>}
  <PulpitModal studyId={study.id} hookEmphasis={study.id==='2co-5-17-21-breve-20261106'} isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={(currentIsDraft?'# Borrador\n\n':'')+shownContent} passageText={study.passageText} passageLabel={study.passageLabel}/>
  </div></div>;
-        }
+ }
