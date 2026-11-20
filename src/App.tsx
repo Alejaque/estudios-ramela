@@ -1,3 +1,4 @@
+import { studyFormatting } from './utils/studyFormatting';
 function prepareReviewedImport(text:string,current:SavedStudy[]):SavedStudy[]{
  let data:unknown;try{data=JSON.parse(text)}catch{throw new Error('El texto no es un JSON válido. No se guardó nada.')}
  const list=Array.isArray(data)?data:[data];
@@ -26,6 +27,7 @@ import { splitForPassage, contentWithPassage, hideLegacyPassageSection } from '.
 import type { SavedStudy } from './types';
 import { NewManualStudy } from './components/NewManualStudy';
 import { StudyEditor } from './components/StudyEditor';
+import { RichStudyField } from './components/RichStudyField';
 import { SyncPanel } from './components/SyncPanel';
 import { PersonalBiblePanel } from './components/PersonalBiblePanel';
 import { setAppBusy } from './utils/appBusy';
@@ -72,7 +74,7 @@ export default function App() {
  function restoreOriginal(){if(!confirm('¿Volver al texto original? Se descartan tus cambios en este estudio.'))return;const next={...edits};delete next[study.id];localStorage.setItem('study_edits',JSON.stringify(next));setEdits(next);}
  const shownContent=hideLegacyPassageSection(study.content,study.passageText,study.id);
  const sections=shownContent.split("\n").filter(l=>l.startsWith("## ")).map(l=>l.slice(3).replace(/[:.]\s*$/,"").trim());
- const mdView=(t:string)=><ReactMarkdown remarkPlugins={[remarkGfm, referenceLinks(study.passageOrTopic)]} urlTransform={bibleUrlTransform} components={{a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted text-[#315b46]" onClick={()=>setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{t}</ReactMarkdown>;
+ const mdView=(t:string)=><ReactMarkdown remarkPlugins={[remarkGfm, studyFormatting, referenceLinks(study.passageOrTopic)]} urlTransform={bibleUrlTransform} components={{a:({href,children})=>href?.startsWith('bible:')?<button type="button" className="underline decoration-dotted text-[#315b46]" onClick={()=>setVerseRef(decodeURIComponent(href.slice(6)))}>{children}</button>:<a href={href}>{children}</a>}}>{t}</ReactMarkdown>;
  const [mode,setMode]=useState<'library'|'drafts'>('library');
  const [drafts,setDrafts]=useState<SavedStudy[]>(()=>{try{return JSON.parse(localStorage.getItem('biblical_drafts')||'[]')}catch{return []}});
  const [draftPassage,setDraftPassage]=useState('');
@@ -157,7 +159,7 @@ const library=(isDraft?drafts:[JUAN_EXPOSICION,COR2_BREVE,JUAN2,JUAN2_BREVE,TES_
  <label className="block font-semibold mb-2" htmlFor="passage-label-inline">Etiqueta (referencia y versión)</label>
  <input id="passage-label-inline" className="library-control w-full mb-4 bg-transparent" value={pLabel} onChange={e=>setPLabel(e.target.value)}/>
  <label className="block font-semibold mb-2" htmlFor="passage-text-inline">Texto del pasaje</label>
- <textarea id="passage-text-inline" className="library-control w-full bg-transparent font-serif" rows={10} value={pText} onChange={e=>setPText(e.target.value)} placeholder="Pegá acá el texto del pasaje"/>
+ <RichStudyField label="Texto del pasaje" value={pText} onChange={setPText} minRows={6}/>
  <p className="text-sm opacity-75 mt-2">Se guarda en este dispositivo (no se sincroniza solo) y aparece como bloque "Pasaje" en el apunte y en Saltos &gt; Pasaje del púlpito. Tu texto original se conserva.</p>
  <div className="flex gap-3 mt-4"><button onClick={savePassageEdit} className="library-control" style={{background:'#315b46',color:'white'}}>Guardar pasaje</button><button onClick={()=>setPassageEditing(false)} className="library-control">Cancelar</button></div>
  </div>}
@@ -171,4 +173,4 @@ const library=(isDraft?drafts:[JUAN_EXPOSICION,COR2_BREVE,JUAN2,JUAN2_BREVE,TES_
  {archive&&<div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-[#fffdf8] dark:bg-[#18241d] rounded-2xl p-6 w-full max-w-xl max-h-[85dvh] overflow-auto"><div className="flex justify-between items-center mb-4"><h2 className="font-serif text-2xl">Guardados anteriores</h2><button aria-label="Cerrar guardados" onClick={()=>setArchive(false)} className="p-3"><X/></button></div>{previous.map(s=><button key={s.id} onClick={()=>load(s)} className="block w-full text-left p-4 border-b"><strong>{s.passageOrTopic}</strong><span className="block">{s.title}</span></button>)}</div></div>}
  <PulpitModal studyId={study.id} hookEmphasis={study.id==='2co-5-17-21-breve-20261106'} isOpen={pulpit} onClose={()=>setPulpit(false)} passageOrTopic={study.passageOrTopic} translation={study.translation} content={(currentIsDraft?'# Borrador\n\n':'')+shownContent} passageText={study.passageText} passageLabel={study.passageLabel}/>
  </div></div>;
- }
+                     }
