@@ -60,7 +60,7 @@ export function SpanishSpelling({editor,onEdit,label}: {editor:RefObject<HTMLDiv
     {!!issues.length&&<div className="flex flex-wrap gap-2 mt-2">{unique.slice(0,12).map(issue=><button key={issue.word} type="button" className="library-control" onMouseDown={e=>e.preventDefault()} onClick={()=>choose(issue)}>{issue.word}</button>)}</div>}
     {unique.length>12&&<p>Se muestran las primeras 12 palabras distintas.</p>}
     {chosen&&<div className="mt-3 border-t border-[#8fa597] pt-3"><p>Revisar: <strong>{chosen.word}</strong></p><p className="text-sm">Elegí una sugerencia o corregí la palabra en el texto.</p><div className="flex flex-wrap gap-2 mt-2">{suggestions.map(word=><button key={word} type="button" className="library-control" aria-label={'Cambiar '+chosen.word+' por '+word} onMouseDown={e=>e.preventDefault()} onClick={()=>replace(word)}>{word}</button>)}<button type="button" className="library-control" onClick={()=>{ignored.current.add(chosen.word.toLocaleLowerCase('es-AR'));scan.current();}}>Omitir en este campo</button></div>{!suggestions.length&&<p className="text-sm">No hay una sugerencia segura. Podés corregirla vos u omitirla.</p>}</div>}
-    <p className="text-xs mt-2"><a className="underline" href="/ortografia-licencias.txt" target="_blank" rel="noopener noreferrer">Diccionario y licencias</a> · <a className="underline" href="/ortografia-fuentes.zip" download>Fuentes del diccionario</a></p>
+    <p className="text-xs mt-2"><a className="underline" href="/ortografia-licencias.txt" target="_blank" rel="noopener noreferrer">Diccionario y licencias</a> · <a className="underline" href="/2-ortografia-fuentes.zip" download>Fuentes del diccionario</a></p>
     <p className="text-sm mt-2">Solo ortografía, no gramática. Los nombres propios y términos bíblicos pueden marcarse aunque estén bien. No cambia nada sin que vos lo elijas. Guardá el estudio al terminar.</p></>}
   </div>;
-                    }
+}
