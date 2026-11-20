@@ -1,0 +1,13 @@
+import aff0 from './aff0';
+import aff1 from './aff1';
+const aff = aff0+aff1;
+import dic0 from './dic0';
+import dic1 from './dic1';
+import dic2 from './dic2';
+import dic3 from './dic3';
+import dic4 from './dic4';
+import dic5 from './dic5';
+import dic6 from './dic6';
+import dic7 from './dic7';
+const dic = dic0+dic1+dic2+dic3+dic4+dic5+dic6+dic7;
+export {aff,dic};
