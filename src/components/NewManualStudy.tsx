@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { SavedStudy } from '../types';
 import { StudyEditor, type StudyEditResult } from './StudyEditor';
 
-const EMPTY_OUTLINE = '## Introducción\n\n\n## Proposición\n\n\n## I. Punto principal\n\n\n## Conclusión\n\n\n## Llamado a la acción\n\n\n## Oración\n';
+const EMPTY_OUTLINE = '## Introducción\n\n\n## Proposición\n\n\n## Contexto\n\n\n## I. Punto principal\n\n\n## Conclusión\n\n\n## Llamado a la acción\n\n\n## Oración\n';
 
 export function NewManualStudy({ onSave, onCancel }: {
   onSave: (study: SavedStudy) => string | null;
@@ -42,4 +42,4 @@ export function NewManualStudy({ onSave, onCancel }: {
     {error && <p role="alert" className="p-4 mb-4 rounded-xl bg-[#f1e7c8] text-black">{error}</p>}
     <StudyEditor title="" content={EMPTY_OUTLINE} size={22} manual saveLabel="Guardar estudio nuevo" alwaysSave confirmCancel={false} onSave={save} onCancel={() => { if (confirm('¿Cerrar el estudio nuevo sin guardarlo?')) onCancel(); }} />
   </section>;
-      }
+}
