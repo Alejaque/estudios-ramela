@@ -397,3 +397,5 @@
 .rich-study-input p:last-child { margin-bottom: 0; }
 .rich-study-input em { font-style: italic; }
 .rich-study-input strong { font-weight: 700; }
+
+::highlight(estudio-ortografia) { text-decoration-line: underline; text-decoration-style: wavy; text-decoration-color: #c72222; text-underline-offset: .2em; }
