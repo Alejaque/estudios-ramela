@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import TurndownService, { gfm } from '../utils/studyMarkdown';
 import { studyFormatting } from '../utils/studyFormatting';
+import { SpanishSpelling } from './SpanishSpelling';
 
 const MarkdownConstructor = TurndownService as unknown as {new(options:unknown): {use:(plugin:unknown)=>void;addRule:(name:string,rule:unknown)=>void;turndown:(html:string)=>string}};
 const markdown = new MarkdownConstructor({headingStyle:'atx', bulletListMarker:'-', emDelimiter:'*', strongDelimiter:'**', codeBlockStyle:'fenced'});
@@ -57,12 +58,13 @@ export function RichStudyField({value, onChange, label, minRows = 4}: {value:str
       <button type="button" className="library-control underline" onMouseDown={e=>e.preventDefault()} onClick={()=>format('underline')} title="Subrayado (Ctrl+U)">Subrayado</button>
       <button type="button" className="library-control" style={{background:'#ffeb80',color:'#192a22'}} onMouseDown={e=>e.preventDefault()} onClick={()=>format('highlight')}>Resaltar</button>
     </div>
-    <div ref={editor} contentEditable suppressContentEditableWarning role="textbox" aria-label={label} aria-multiline="true" className="rich-study-input markdown-theology rounded-xl border-2 border-[#8fa597] bg-white text-black p-4 font-serif leading-relaxed" style={{minHeight:`${minRows*1.7+1.5}em`,fontSize:'inherit'}} dangerouslySetInnerHTML={{__html:html}}
+    <div ref={editor} lang="es-AR" spellCheck={true} autoCorrect="off" autoCapitalize="sentences" contentEditable suppressContentEditableWarning role="textbox" aria-label={label} aria-multiline="true" className="rich-study-input markdown-theology rounded-xl border-2 border-[#8fa597] bg-white text-black p-4 font-serif leading-relaxed" style={{minHeight:`${minRows*1.7+1.5}em`,fontSize:'inherit'}} dangerouslySetInnerHTML={{__html:html}}
       onInput={emit} onSelect={remember} onBlur={remember} onKeyUp={remember} onMouseUp={remember} onTouchEnd={remember}
       onKeyDown={e=>{if((e.ctrlKey||e.metaKey) && ['b','i','u'].includes(e.key.toLowerCase())){e.preventDefault();format(({b:'bold',i:'italic',u:'underline'} as Record<string,string>)[e.key.toLowerCase()]);}}}
       onPaste={e=>{e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'));emit();}}
       onDrop={e=>e.preventDefault()} onClick={e=>{if((e.target as HTMLElement).closest('a'))e.preventDefault();}}
     />
+    <SpanishSpelling editor={editor} onEdit={emit} label={label}/>
     <p className="text-sm font-sans opacity-75 mt-2" aria-live="polite">{hint}</p>
   </div>;
 }
