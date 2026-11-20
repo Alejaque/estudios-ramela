@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -80,6 +81,13 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       devApiPlugin(),
+      {
+        name: 'ortografia-source-archive',
+        generateBundle() {
+          const encoded = [0, 1].map(i => fs.readFileSync(path.resolve(`scripts/ortografia-fuentes-${i}.b64`), 'utf8')).join('');
+          this.emitFile({ type: 'asset', fileName: '2-ortografia-fuentes.zip', source: Buffer.from(encoded, 'base64') });
+        },
+      },
       VitePWA({
         registerType: 'prompt',
         includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'portada-alejandro-ramela.jpg'],
