@@ -52,7 +52,7 @@ export function StudyEditor({ title, content, passageText, passageLabel, size, m
   const passageAt = firstPoint > 0 ? firstPoint - 1 : -1;
   const changed = t !== title || joinSections(secs) !== joinSections(splitSections(content)) || pt !== (passageText ?? '') || pl !== (passageLabel ?? '');
   return (
-    <div className="rounded-2xl border-2 border-[#315b46] bg-[#fffdf8] dark:bg-[#18241d] p-4 sm:p-6 space-y-5" style={{ fontSize: size }}>
+    <div lang="es-AR" spellCheck={true} autoCorrect="off" className="rounded-2xl border-2 border-[#315b46] bg-[#fffdf8] dark:bg-[#18241d] p-4 sm:p-6 space-y-5" style={{ fontSize: size }}>
       <div className="sticky top-[84px] z-20 flex flex-wrap gap-3 items-center bg-[#fffdf8] dark:bg-[#18241d] py-2">
         <button type="button" disabled={!changed && !alwaysSave} onClick={() => onSave({ title: t.trim() || title, content: joinSections(secs), passageText: pt, passageLabel: pl })} className="library-control" style={{ minHeight: 52, fontSize: 18, background: '#315b46', color: 'white', opacity: changed || alwaysSave ? 1 : 0.5 }}>{saveLabel}</button>
         <button type="button" onClick={() => { if (!confirmCancel || !changed || confirm('¿Salir sin guardar los cambios?')) onCancel(); }} className="library-control" style={{ minHeight: 52, fontSize: 18 }}>Cancelar</button>
